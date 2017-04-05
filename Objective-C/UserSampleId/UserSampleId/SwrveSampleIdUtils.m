@@ -1,17 +1,24 @@
-#import "UserSampleIdUtils.h"
+#import "SwrveSampleIdUtils.h"
 #import "swrve.h"
 #import <CommonCrypto/CommonHMAC.h>
 
-@implementation UserSampleIdUtils
+@implementation SwrveSampleIdUtils
 
 /**
- * A utility to send a user_property update to Swrve. The user property should be a number
- * from 1-100.
- * This number can then be used to separate users into target groups and compare different
- * marketing strategies.
- * e.g. To target 1/4 of users you would use the filter "user_sample_id between 1 and 25 inclusive"
+ * A utility to send a user_property update to Swrve. The user property should
+ * be a number from 1-100.
+ * This number can then be used to separate users into target groups and
+ * compare different marketing strategies.
+ * e.g. To target 1/4 of users you would use the filter
+ * "user_sample_id between 1 and 25 inclusive"
+ 
+ * config.userId = @"01a94aec-d8ba-4292-8ab3-04edef4d1d71"; // returns 1
+ * config.userId = @"018bb009-db2c-4feb-9c61-ec5871cd1cea"; // returns 50
+ * config.userId = @"01b2d2e6-3fa5-4abb-aad8-d0aed0ece9b8"; // returns 100
  */
-+ (void) generateNumberForUser:(NSString *) userId {
++ (void) sendSampleIdForUser {
+    
+    NSString *userId = [[Swrve sharedInstance] userID];
     
     NSString *hash = [self createStringWithMD5:userId];
     hash = [hash substringToIndex:8];
@@ -33,6 +40,7 @@
     
     // Update the user user_sample_id user property in Swrve
     [[Swrve sharedInstance] userUpdate:@{@"user_sample_id": [NSString stringWithFormat:@"%d", userSampleId]}];
+    [[Swrve sharedInstance] sendQueuedEvents];
 }
 
 // Method to return an MD5 hash of a string
@@ -63,7 +71,7 @@
 }
 
 + (id)alloc {
-    [NSException raise:@"Cannot be instantiated!" format:@"Static class 'UserSampleIdUtils' cannot be instantiated!"];
+    [NSException raise:@"Cannot be instantiated!" format:@"Static class 'SwrveSampleIdUtils' cannot be instantiated!"];
     return nil;
 }
 

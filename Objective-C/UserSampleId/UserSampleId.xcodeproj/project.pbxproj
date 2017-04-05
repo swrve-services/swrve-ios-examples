@@ -14,7 +14,7 @@
 		639E0BBF1E85B57E00E354F9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 639E0BBD1E85B57E00E354F9 /* Main.storyboard */; };
 		639E0BC11E85B57E00E354F9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 639E0BC01E85B57E00E354F9 /* Assets.xcassets */; };
 		639E0BC41E85B57E00E354F9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 639E0BC21E85B57E00E354F9 /* LaunchScreen.storyboard */; };
-		639E0BCD1E85B92100E354F9 /* UserSampleIdUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 639E0BCC1E85B92100E354F9 /* UserSampleIdUtils.m */; };
+		639E0BCD1E85B92100E354F9 /* SwrveSampleIdUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 639E0BCC1E85B92100E354F9 /* SwrveSampleIdUtils.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,8 +28,8 @@
 		639E0BC01E85B57E00E354F9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		639E0BC31E85B57E00E354F9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		639E0BC51E85B57E00E354F9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		639E0BCB1E85B92100E354F9 /* UserSampleIdUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UserSampleIdUtils.h; sourceTree = "<group>"; };
-		639E0BCC1E85B92100E354F9 /* UserSampleIdUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UserSampleIdUtils.m; sourceTree = "<group>"; };
+		639E0BCB1E85B92100E354F9 /* SwrveSampleIdUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SwrveSampleIdUtils.h; sourceTree = "<group>"; };
+		639E0BCC1E85B92100E354F9 /* SwrveSampleIdUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SwrveSampleIdUtils.m; sourceTree = "<group>"; };
 		6DD2D97272CB9FA3CAA7BABE /* Pods-UserSampleId.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UserSampleId.debug.xcconfig"; path = "Pods/Target Support Files/Pods-UserSampleId/Pods-UserSampleId.debug.xcconfig"; sourceTree = "<group>"; };
 		A837B773759350CCD5F1527A /* Pods-UserSampleId.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-UserSampleId.release.xcconfig"; path = "Pods/Target Support Files/Pods-UserSampleId/Pods-UserSampleId.release.xcconfig"; sourceTree = "<group>"; };
 		F71D8CF2727FBC143B84BCE8 /* libPods-UserSampleId.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-UserSampleId.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -77,8 +77,8 @@
 				639E0BC21E85B57E00E354F9 /* LaunchScreen.storyboard */,
 				639E0BC51E85B57E00E354F9 /* Info.plist */,
 				639E0BB41E85B57E00E354F9 /* Supporting Files */,
-				639E0BCB1E85B92100E354F9 /* UserSampleIdUtils.h */,
-				639E0BCC1E85B92100E354F9 /* UserSampleIdUtils.m */,
+				639E0BCB1E85B92100E354F9 /* SwrveSampleIdUtils.h */,
+				639E0BCC1E85B92100E354F9 /* SwrveSampleIdUtils.m */,
 			);
 			path = UserSampleId;
 			sourceTree = "<group>";
@@ -232,7 +232,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				639E0BBC1E85B57E00E354F9 /* ViewController.m in Sources */,
-				639E0BCD1E85B92100E354F9 /* UserSampleIdUtils.m in Sources */,
+				639E0BCD1E85B92100E354F9 /* SwrveSampleIdUtils.m in Sources */,
 				639E0BB91E85B57E00E354F9 /* AppDelegate.m in Sources */,
 				639E0BB61E85B57E00E354F9 /* main.m in Sources */,
 			);

@@ -14,8 +14,7 @@ How to Run This Demo in XCode
 
 How to Use This in Your Own App
 -------------------------------
-- Copy UserSampleIdUtils.h and UserSampleIdUtils.m into your own project
-- Immediately after Initializing Swrve, call the [UserSampleIdUtils generateNumberForUser:swrveUserId] method.
-- This method takes the swrve_user_id as a parameter and generates a number from 1-100.
-- It then updates the "user_sample_id" user property with the value generated.
+- Copy SwrveSampleIdUtils.h and SwrveSampleIdUtils.m into your own project
+- Immediately after initializing Swrve, call the [SwrveSampleIdUtils sendSampleIdForUser] method.
+- This method generates a number from 1-100 and then updates the "user_sample_id" user property with the value generated.
 - This "user_sample_id" user_property can be used to target groups of users with different marketing strategies.

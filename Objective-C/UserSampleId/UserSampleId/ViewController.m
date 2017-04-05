@@ -1,5 +1,5 @@
 #import "ViewController.h"
-#import "UserSampleIdUtils.h"
+#import "SwrveSampleIdUtils.h"
 #import "swrve.h"
 
 @interface ViewController ()
