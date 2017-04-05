@@ -6,6 +6,7 @@ This repository contains additional examples of how to use the Swrve iOS SDK.
 Examples
 --------
 * [Change User ID](/Objective-C/ChangeUserID/) - An example of how to implement a class which allows you to change user id after the Swrve SDK is initialized.
+* [User Sample ID](/Objective-C/UserSampleId/) - An example of how to implement a class which allows you to send a user property from 1-100 for each user. This user property can then be used to separate users into target groups and compare different marketing strategies. 
 
 Getting started
 ---------------
@@ -25,4 +26,3 @@ We would love to see your contributions! Follow these steps:
 License
 -------
 © Copyright Swrve Mobile Inc or its licensors. Distributed under the [Apache 2.0 License](LICENSE).
-
