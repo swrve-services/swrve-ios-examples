@@ -1,20 +1,21 @@
 #import "UserSampleIdUtils.h"
 #import "swrve.h"
 #import <CommonCrypto/CommonHMAC.h>
+
 @implementation UserSampleIdUtils
 
 /**
  * A utility to send a user_property update to Swrve. The user property should be a number
- * from 1-100 and allows is generated using thier Swrve User Id.
+ * from 1-100.
  * This number can then be used to separate users into target groups and compare different
- * marketing strategys.
- * E.g. To target 1/4 of users you would use the filter "user_sample_id between 1 and 25 inclusive"
+ * marketing strategies.
+ * e.g. To target 1/4 of users you would use the filter "user_sample_id between 1 and 25 inclusive"
  */
 + (void) generateNumberForUser:(NSString *) userId {
     
     NSString *hash = [self createStringWithMD5:userId];
     hash = [hash substringToIndex:8];
-    double user_number =0;
+    double user_number = 0;
     unsigned long long user_number_long = 0;
     
     // Convert the string to an unsigned long long
@@ -31,8 +32,7 @@
     int userSampleId = ceil(user_range * 100.0);
     
     // Update the user user_sample_id user property in Swrve
-    [[Swrve sharedInstance] userUpdate:@{@"user_sample_id": [NSString stringWithFormat:@"%d",userSampleId]}];
-    [[Swrve sharedInstance] sendQueuedEvents];
+    [[Swrve sharedInstance] userUpdate:@{@"user_sample_id": [NSString stringWithFormat:@"%d", userSampleId]}];
 }
 
 // Method to return an MD5 hash of a string

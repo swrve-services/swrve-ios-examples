@@ -4,6 +4,5 @@
 # use_frameworks!
 
 target 'UserSampleId' do
-pod 'SwrveSDK'
+  pod 'SwrveSDK'
 end
-

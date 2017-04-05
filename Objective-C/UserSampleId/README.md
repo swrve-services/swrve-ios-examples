@@ -1,11 +1,7 @@
 Swrve SDK User Sample Id
 -------------------------
-Example of how to use the user id to generate an int between 1 and 100 and update a user property in Swrve
-
-Overview
---------
 This solution generates a number between 1 and 100 and assign it to each user as a user property. 
-This number can then be used to sort users into different groups (or Swimlanes) and then target them with different marketing strategies over multiple campaigns.
+This number can then be used to sort users into different groups and then target them with different marketing strategies over multiple campaigns.
 
 How to Run This Demo in XCode
 ----------------------------
