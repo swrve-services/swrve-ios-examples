@@ -10,7 +10,7 @@
  * marketing strategys.
  * E.g. To target 1/4 of users you would use the filter "user_sample_id between 1 and 25 inclusive"
  */
-+ (int) generateNumberForUser:(NSString *) userId {
++ (void) generateNumberForUser:(NSString *) userId {
     
     NSString *hash = [self createStringWithMD5:userId];
     hash = [hash substringToIndex:8];
@@ -30,7 +30,9 @@
     // returns an integer from 1-100 inclusive
     int userSampleId = ceil(user_range * 100.0);
     
-    return userSampleId;
+    // Update the user user_sample_id user property in Swrve
+    [[Swrve sharedInstance] userUpdate:@{@"user_sample_id": [NSString stringWithFormat:@"%d",userSampleId]}];
+    [[Swrve sharedInstance] sendQueuedEvents];
 }
 
 // Method to return an MD5 hash of a string

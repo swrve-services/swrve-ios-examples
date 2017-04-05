@@ -2,7 +2,7 @@
 
 @interface UserSampleIdUtils : NSObject{}
 
-+ (int) generateNumberForUser:(NSString*) userID;
++ (void) generateNumberForUser:(NSString*) userID;
 + (NSString*) createStringWithMD5:(NSString*)source;
 
 @end

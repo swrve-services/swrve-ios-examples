@@ -29,16 +29,7 @@
     NSString *swrveUserId = [[Swrve sharedInstance] userID];
     
     // Use the UserSampleIdUtils to genereate a number between 1-100 for the userId
-    int userSampleId = [UserSampleIdUtils generateNumberForUser:swrveUserId];
-    
-    // Update the user user_sample_id user property in Swrve
-    [[Swrve sharedInstance] userUpdate:@{@"user_sample_id": [NSString stringWithFormat:@"%d",userSampleId]}];
-    [[Swrve sharedInstance] sendQueuedEvents];
-    
-    
-    // Store the value in defaults if needed
-    [[NSUserDefaults standardUserDefaults] setInteger:userSampleId forKey:@"userSampleId"];
-    [[NSUserDefaults standardUserDefaults] synchronize];
+    [UserSampleIdUtils generateNumberForUser:swrveUserId];
     
     return YES;
 }
