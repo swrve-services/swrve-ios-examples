@@ -6,10 +6,10 @@ This number can then be used to sort users into different groups and then target
 How to Run This Demo in XCode
 ----------------------------
 - Run the "pod install" command inside the UserSampleId folder.
-- Open the project located under UserSampleIdExample/UserSampleIdExample.xcodproj
+- Open the project located under UserSampleId/UserSampleId.xcworkspace
 - Replace YOUR_APP_ID in AppDelegate.m with your Swrve app ID.
 - Replace YOUR_API_KEY in AppDelegate.m with your Swrve API key.
-- Run UserSampleIdExample app normally.
+- Run UserSampleId app normally.
 - Add the device as a QA device to see the "user_sample_id" user property being sent to Swrve.
 
 How to Use This in Your Own App

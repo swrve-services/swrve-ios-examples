@@ -2,9 +2,10 @@ Swrve SDK Change User ID Sample
 -------------------------------
 Example of how to implement [SwrveIdentityUtils](ChangeUserID/SwrveIdentityUtils.m) class which allows you to change user id after the Swrve SDK is initialized
 
-How to run the demo in XCode
+How to Run This Demo in XCode
 ----------------------------
-- Open the project located under ChangeUserID/ChangeUserID.xcodproj
+- Run the "pod install" command inside the ChangeUserID folder.
+- Open the project located under ChangeUserID/ChangeUserID.xcworkspace
 - Replace YOUR_APP_ID in AppDelegate.m with your Swrve app ID.
 - Replace YOUR_API_KEY in AppDelegate.m with your Swrve API key.
 - Run ChangeUserID app normally.
