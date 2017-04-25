@@ -32,9 +32,10 @@ NSString* _contentUrl;
     _eventsUrl = _config.eventsServer;
     _contentUrl = _config.contentServer;
     
-//  Method Swizzling must be turned off for this solution to work. For instructions on how to
-//  do this go to the "Disabling Push Notification Method Swizzling" section of our iOS
-//  implementation guide: https://docs.swrve.com/developer-documentation/integration/ios#Push_Notifications
+    //  Method Swizzling must be turned off for this solution to work. For instructions on how to
+    //  do this go to the "Disabling Push Notification Method Swizzling" section of our iOS
+    //  implementation guide: https://docs.swrve.com/developer-documentation/integration/ios#Push_Notifications
+    
     if( config.pushEnabled == YES && config.autoCollectDeviceToken == YES ) {
         NSException* myException = [NSException
                                     exceptionWithName:@"SwrveIdentityUtilsException"
