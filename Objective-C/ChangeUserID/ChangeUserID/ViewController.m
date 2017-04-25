@@ -36,10 +36,9 @@
         [self changeToUserID:nil];
 }
 
-
-    // Utility function that changes the user id and sends diagnostic events
-    // to make sure events are sent correctly with the old user ID and the
-    // new user ID.
+// Utility function that changes the user id and sends diagnostic events
+// to make sure events are sent correctly with the old user ID and the
+// new user ID.
 - (void) changeToUserID:(NSString*) userID {
     // Save the userID in defaults to be used when the app is launched next time
     [[NSUserDefaults standardUserDefaults] setObject:userID forKey:@"userID"];
