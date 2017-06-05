@@ -1,11 +1,3 @@
-//
-//  AppDelegate.swift
-//  Basic
-//
-//  Created by John Kearney on 6/5/17.
-//  Copyright © 2017 Swrve. All rights reserved.
-//
-
 import UIKit
 
 @UIApplicationMain
