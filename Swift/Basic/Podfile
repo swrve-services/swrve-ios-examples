@@ -1,0 +1,3 @@
+target 'Basic' do
+  pod 'SwrveSDK', '4.9.2'
+end
