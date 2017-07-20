@@ -7,6 +7,7 @@ Examples
 --------
 * [Change User ID](/Objective-C/ChangeUserID/) - An example of how to implement a class which allows you to change user id after the Swrve SDK is initialized.
 * [User Sample ID](/Objective-C/UserSampleId/) - An example of how to implement a class which allows you to send a user property from 1-100 for each user. This user property can then be used to separate users into target groups and compare different marketing strategies. 
+* [App Store Review](/Objective-C/AppStoreReviewSolution/) - An example of how to overide the rendering of In App Messages to call the new API for requesting the user rate your app in the app store. 
 
 Getting started
 ---------------
