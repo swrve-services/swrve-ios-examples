@@ -1,11 +1,3 @@
-//
-//  ViewController.m
-//  AppStoreReviewSolution
-//
-//  Created by David Breen on 7/20/17.
-//  Copyright © 2017 swrve. All rights reserved.
-//
-
 #import "ViewController.h"
 
 @interface ViewController ()

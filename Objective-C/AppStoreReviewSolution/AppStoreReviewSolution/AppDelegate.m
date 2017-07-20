@@ -21,8 +21,7 @@
                      launchOptions:launchOptions];
     
     // Start of cusomization for App Review Solution
-    AppDelegate *appDelegate = self;
-    [Swrve sharedInstance].talk.showMessageDelegate = appDelegate;
+    [Swrve sharedInstance].talk.showMessageDelegate = self;
     
     return YES;
 }
