@@ -1,0 +1,3 @@
+target 'AppStoreReview' do
+  pod 'SwrveSDK', '4.9.2'
+end

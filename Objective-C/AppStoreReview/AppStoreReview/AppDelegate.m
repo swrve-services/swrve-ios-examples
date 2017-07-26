@@ -29,7 +29,7 @@
 // If we get a message containing our special string then show an alert
 // But if we get something else fallback to our normal message display code.
 - (void)showMessage:(SwrveMessage *)message {
-    if ([message.name rangeOfString:@"AppStore Review"].location != NSNotFound) {
+    if ([message.name rangeOfString:@"appstore review" options:NSCaseInsensitiveSearch].location != NSNotFound) {
         [SKStoreReviewController requestReview];
         [message wasShownToUser];
     }
