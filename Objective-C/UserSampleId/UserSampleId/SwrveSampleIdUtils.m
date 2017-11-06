@@ -1,5 +1,5 @@
 #import "SwrveSampleIdUtils.h"
-#import "swrve.h"
+#import "SwrveSDK.h"
 #import <CommonCrypto/CommonHMAC.h>
 
 @implementation SwrveSampleIdUtils
@@ -18,7 +18,7 @@
  */
 + (void) sendSampleIdForUser {
     
-    NSString *userId = [[Swrve sharedInstance] userID];
+    NSString *userId = [SwrveSDK userID];
     
     NSString *hash = [self createStringWithMD5:userId];
     hash = [hash substringToIndex:8];
@@ -39,8 +39,8 @@
     int userSampleId = ceil(user_range * 100.0);
     
     // Update the user user_sample_id user property in Swrve
-    [[Swrve sharedInstance] userUpdate:@{@"user_sample_id": [NSString stringWithFormat:@"%d", userSampleId]}];
-    [[Swrve sharedInstance] sendQueuedEvents];
+    [SwrveSDK userUpdate:@{@"user_sample_id": [NSString stringWithFormat:@"%d", userSampleId]}];
+    [SwrveSDK sendQueuedEvents];
 }
 
 // Method to return an MD5 hash of a string

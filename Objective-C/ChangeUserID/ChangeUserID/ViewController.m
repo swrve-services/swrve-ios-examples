@@ -43,16 +43,16 @@
     // Save the userID in defaults to be used when the app is launched next time
     [[NSUserDefaults standardUserDefaults] setObject:userID forKey:@"userID"];
     
-    NSString *oldUserID = [[Swrve sharedInstance] userID];
+    NSString *oldUserID = [SwrveSDK userID];
     NSString* eventName = [NSString stringWithFormat:@"Changing from %@ to %@", oldUserID, userID];
-    [[Swrve sharedInstance]event:eventName];
+    [SwrveSDK event:eventName];
     
     AppDelegate *appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
     [appDelegate.identityUtils changeUserID:userID];
     
     eventName = [NSString stringWithFormat:@"Changed to %@ from %@", userID, oldUserID];
-    [[Swrve sharedInstance]event:eventName];
-    [[Swrve sharedInstance] sendQueuedEvents];
+    [SwrveSDK event:eventName];
+    [SwrveSDK sendQueuedEvents];
 }
 
 @end
