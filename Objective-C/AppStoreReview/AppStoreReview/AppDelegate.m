@@ -1,4 +1,5 @@
 #import "AppDelegate.h"
+#import "SwrveSDK.h"
 
 @interface AppDelegate ()
 
@@ -15,13 +16,13 @@
     
     SwrveConfig* config = [[SwrveConfig alloc] init];
     
-    [Swrve sharedInstanceWithAppID:appId
+    [SwrveSDK sharedInstanceWithAppID:appId
                             apiKey:apiKey
                             config:config
                      launchOptions:launchOptions];
     
     // Start of cusomization for App Review Solution
-    [Swrve sharedInstance].talk.showMessageDelegate = self;
+    [SwrveSDK messaging].showMessageDelegate = self;
     
     return YES;
 }
@@ -34,7 +35,7 @@
         [message wasShownToUser];
     }
     else {
-        [[Swrve sharedInstance].talk showMessage:message];
+        [[SwrveSDK messaging] showMessage:message];
     }
 }
 

@@ -4,11 +4,10 @@
 //  identity in case the user logs out an another logs in.
 
 #import "SwrveIdentityUtils.h"
-#import "SwrveFileManagement.h"
 #import <UIKit/UIKit.h>
 
 @interface SwrveIdentityUtils()
-- (void) appendUserIDToCacheFiles;
+
 @end
 
 @implementation SwrveIdentityUtils {
@@ -59,31 +58,25 @@ NSString* _contentUrl;
 }
 
 - (void) initializeSDK:(NSString*) userID launchOptions:(NSDictionary*) launchOptions
-
 {
     // Destory old instance, if it exists
-    if( [Swrve sharedInstance] != nil )
+    if( [SwrveSDK sharedInstance] != nil )
     {
-        // Session has ended for the current user
-        NSMutableDictionary* json = [[NSMutableDictionary alloc] init];
-        [[Swrve sharedInstance] queueEvent:@"session_end" data:json triggerCallback:false];
-        
         // Save events to disk.
-        [[Swrve sharedInstance] saveEventsToDisk];
+        [SwrveSDK saveEventsToDisk];
         
         // Try to send the events to Swrves servers.  If this fails the events won't be sent
         // until the SDK is initialized with the old user's ID again.
-        [[Swrve sharedInstance] sendQueuedEvents];
+        [SwrveSDK sendQueuedEvents];
         
         // Shutdown the SDK
-        [[Swrve class] performSelector:@selector(resetSwrveSharedInstance)];
+        [[SwrveSDK class] performSelector:@selector(resetSwrveSharedInstance)];
     }
     
     // Add the user id to the name of the local DB for the SDK.  This will 'namespace'
     // all of the events raised and content to the user ID.
     _config.userId = (userID == nil) ? @"invalid_user_id" : userID;
-    [self appendUserIDToCacheFiles];
-    
+
     
     // Don't send any data to Swrve servers if userID is nil
     if(userID == nil){
@@ -95,34 +88,9 @@ NSString* _contentUrl;
     }
     
     // Create the Swrve Instance
-    [Swrve sharedInstanceWithAppID:_appID apiKey:_apiKey config:_config launchOptions:launchOptions];
-    // Call appDidBecomeActive: to finish initialization of the SDK
-    [[Swrve sharedInstance] performSelector:@selector(appDidBecomeActive:) withObject:nil];
-}
-
-//  Call this method to append the correct user_id to the cache files.  This will ensure
-//  that events which can't be sent for a user are saved. They will be sent the next time
-//  the user logs on to the device
-- (void) appendUserIDToCacheFiles
-{
-    NSString* caches = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString* documents = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString* applicationSupport = [SwrveFileManagement applicationSupportPath];
-    
-    _config.eventCacheFile = [applicationSupport stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"swrve_events.txt", nil] componentsJoinedByString:@"."]];
-    _config.eventCacheSecondaryFile = [caches stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"swrve_events.txt", nil] componentsJoinedByString:@"."]];
-    _config.locationCampaignCacheFile = [applicationSupport stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"lc.txt", nil] componentsJoinedByString:@"."]];
-    _config.locationCampaignCacheSecondaryFile = [caches stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"lc.txt", nil] componentsJoinedByString:@"."]];
-    _config.locationCampaignCacheSignatureFile = [applicationSupport stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"lcsgt.txt", nil] componentsJoinedByString:@"."]];
-    _config.locationCampaignCacheSignatureSecondaryFile = [caches stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"lcsgt.txt", nil] componentsJoinedByString:@"."]];
-    _config.userResourcesCacheFile = [applicationSupport stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"srcngt2.txt", nil] componentsJoinedByString:@"."]];
-    _config.userResourcesCacheSecondaryFile = [caches stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"srcngt2.txt", nil] componentsJoinedByString:@"."]];
-    _config.userResourcesCacheSignatureFile = [applicationSupport stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"srcngtsgt2.txt", nil] componentsJoinedByString:@"."]];
-    _config.userResourcesCacheSignatureSecondaryFile = [caches stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"srcngtsgt2.txt", nil] componentsJoinedByString:@"."]];
-    _config.userResourcesDiffCacheFile = [caches stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"rsdfngtsgt2.txt", nil] componentsJoinedByString:@"."]];
-    _config.userResourcesDiffCacheSignatureFile = [caches stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"rsdfngtsgt2.txt", nil] componentsJoinedByString:@"."]];
-    _config.installTimeCacheFile = [documents stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"swrve_install.txt", nil] componentsJoinedByString:@"."]];
-    _config.installTimeCacheSecondaryFile = [caches stringByAppendingPathComponent: [[NSArray arrayWithObjects:_config.userId, @"swrve_install.txt", nil] componentsJoinedByString:@"."]];
+    [SwrveSDK sharedInstanceWithAppID:_appID apiKey:_apiKey config:_config launchOptions:launchOptions];
+    // Call beginSession to finish initialization of the SDK
+    [[SwrveSDK sharedInstance] performSelector:@selector(appDidBecomeActive:) withObject:nil];
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)newDeviceToken {

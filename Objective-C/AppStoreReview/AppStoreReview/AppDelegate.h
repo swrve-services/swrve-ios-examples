@@ -2,7 +2,7 @@
 
 //--AppStoreReviewSolution-- Add the following two imports
 #import <StoreKit/StoreKit.h>
-#import "swrve.h"
+#import "SwrveSDK.h"
 
 
 //--AppStoreReviewSolution-- Add SwrveMessageDelegate to the protocals

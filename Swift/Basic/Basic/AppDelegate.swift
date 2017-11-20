@@ -20,13 +20,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let appID:Int32 = 0
         let apiKey:String = "your_api_key_here"
 
-        Swrve.sharedInstance(withAppID:appID, apiKey:apiKey, config:config, launchOptions:launchOptions)
+        SwrveSDK.sharedInstance(withAppID:appID, apiKey:apiKey, config:config, launchOptions:launchOptions)
 
         return true
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any]) {
-        Swrve.sharedInstance().talk.pushNotificationReceived(userInfo)
+        SwrveSDK.pushNotificationReceived(userInfo)
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

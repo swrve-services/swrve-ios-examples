@@ -47,15 +47,15 @@
 //  Needed to disable Method Swizzling. This is sends the device token to Swrve
 //  to allow Push Notifications
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-    if ([Swrve sharedInstance].talk != nil) {
-        [[Swrve sharedInstance].talk setDeviceToken:deviceToken];
+    if ([SwrveSDK messaging] != nil) {
+        [SwrveSDK setDeviceToken:deviceToken];
     }
 }
 
 //  Needed to disable Method Swizzling. This is used to send the push engaged
 //  event to Swrve for tracking campaign metrics
 -(void) application:(UIApplication*)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-    [[Swrve sharedInstance].talk pushNotificationReceived:userInfo];
+    [SwrveSDK pushNotificationReceived:userInfo];
 }
 
 @end

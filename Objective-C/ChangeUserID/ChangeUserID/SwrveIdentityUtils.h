@@ -1,4 +1,4 @@
-#import "swrve.h"
+#import "SwrveSDK.h"
 
 @interface SwrveIdentityUtils : NSObject
 
