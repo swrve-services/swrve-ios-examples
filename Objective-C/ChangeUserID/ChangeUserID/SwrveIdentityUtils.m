@@ -96,8 +96,8 @@ NSString* _contentUrl;
     
     // Create the Swrve Instance
     [Swrve sharedInstanceWithAppID:_appID apiKey:_apiKey config:_config launchOptions:launchOptions];
-    // Call beginSession to finish initialization of the SDK
-    [[Swrve sharedInstance] performSelector:@selector(beginSession)];
+    // Call appDidBecomeActive: to finish initialization of the SDK
+    [[Swrve sharedInstance] performSelector:@selector(appDidBecomeActive:) withObject:nil];
 }
 
 //  Call this method to append the correct user_id to the cache files.  This will ensure
