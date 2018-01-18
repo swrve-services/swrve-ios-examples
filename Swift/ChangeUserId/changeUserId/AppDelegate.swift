@@ -4,7 +4,7 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
+    var identityUtils: SwrveIdentityUtils = SwrveIdentityUtils()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -30,8 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let appID: Int32 = 0
         let apiKey = "your_api_key_here"
         
-        let swrveIdentityUtils = SwrveIdentityUtils()
-        swrveIdentityUtils.createSDKInstance(appID, apiKey: apiKey, config: config, userID: userID, launchOptions: launchOptions)
+        identityUtils.createSDKInstance(appID, apiKey: apiKey, config: config, userID: userID, launchOptions: launchOptions)
         
         return true
     }
