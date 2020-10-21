@@ -18,7 +18,9 @@
     SwrveConfig* config = [[SwrveConfig alloc] init];
     
     // Initialize Swrve
-    [SwrveSDK sharedInstanceWithAppID:appId apiKey:apiKey config:config launchOptions:launchOptions];
+    [SwrveSDK sharedInstanceWithAppID:appId
+    apiKey:apiKey
+    config:config];
     
     // Use the SwrveSampleIdUtils to genereate a number between 1-100 for the
     // userId. This function should be called as soon as possible after

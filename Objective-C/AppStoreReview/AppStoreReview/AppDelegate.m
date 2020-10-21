@@ -17,9 +17,8 @@
     SwrveConfig* config = [[SwrveConfig alloc] init];
     
     [SwrveSDK sharedInstanceWithAppID:appId
-                            apiKey:apiKey
-                            config:config
-                     launchOptions:launchOptions];
+    apiKey:apiKey
+    config:config];
     
     // Start of cusomization for App Review Solution
     [SwrveSDK messaging].showMessageDelegate = self;
