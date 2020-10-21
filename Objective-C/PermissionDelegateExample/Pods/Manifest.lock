@@ -1,0 +1,25 @@
+PODS:
+  - SwrveConversationSDK (6.7.0):
+    - SwrveSDKCommon (= 6.7.0)
+  - SwrveSDK (6.7.0):
+    - SwrveConversationSDK (= 6.7.0)
+    - SwrveSDKCommon (= 6.7.0)
+  - SwrveSDKCommon (6.7.0)
+
+DEPENDENCIES:
+  - SwrveSDK (= 6.7.0)
+
+SPEC REPOS:
+  trunk:
+    - SwrveConversationSDK
+    - SwrveSDK
+    - SwrveSDKCommon
+
+SPEC CHECKSUMS:
+  SwrveConversationSDK: 14b54b5832c417da7b175153497ec079439f776b
+  SwrveSDK: 98c61199cbe0776ba52dee00a84d499a11f95ae0
+  SwrveSDKCommon: d8acefbd9f735f0bf7df592976c050b643b94dc2
+
+PODFILE CHECKSUM: bbc52b2bb3a2396f1cb2c896c758b5f3f3042428
+
+COCOAPODS: 1.8.4

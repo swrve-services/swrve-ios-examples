@@ -1,3 +1,0 @@
-target 'ChangeUserID' do
-  pod 'SwrveSDK', '5.0.0'
-end

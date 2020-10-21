@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16097.3" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="IUh-a5-aha">
+                                <rect key="frame" x="116.5" y="84" width="181" height="30"/>
+                                <state key="normal" title="requestCameraPermission"/>
+                                <connections>
+                                    <action selector="requestCameraPermission:" destination="BYZ-38-t0r" eventType="touchUpInside" id="5iS-MB-g6C"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Szo-GI-Q1J">
+                                <rect key="frame" x="112" y="154" width="190" height="30"/>
+                                <state key="normal" title="requestContactsPermission"/>
+                                <connections>
+                                    <action selector="requestContactsPermission:" destination="BYZ-38-t0r" eventType="touchUpInside" id="eaa-j1-QhV"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5WI-V0-Ig8">
+                                <rect key="frame" x="99" y="224" width="216" height="30"/>
+                                <state key="normal" title="requestPhotoLibraryPermission"/>
+                                <connections>
+                                    <action selector="requestPhotoLibraryPermission:" destination="BYZ-38-t0r" eventType="touchUpInside" id="u07-dt-axx"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="3vV-Yg-ZNP">
+                                <rect key="frame" x="90" y="294" width="234" height="30"/>
+                                <state key="normal" title="requestLocationAlwaysPermission"/>
+                                <connections>
+                                    <action selector="requestLocationAlwaysPermission:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Smg-u3-beg"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="cgM-4V-4eq">
+                                <rect key="frame" x="75" y="364" width="264" height="30"/>
+                                <state key="normal" title="requestLocationWhenInUsePermission"/>
+                                <connections>
+                                    <action selector="requestLocationWhenInUsePermission:" destination="BYZ-38-t0r" eventType="touchUpInside" id="teE-1c-roj"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="Szo-GI-Q1J" firstAttribute="top" secondItem="IUh-a5-aha" secondAttribute="bottom" constant="40" id="7ZR-WU-DYf"/>
+                            <constraint firstItem="Szo-GI-Q1J" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Bqf-cg-4if"/>
+                            <constraint firstItem="3vV-Yg-ZNP" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="C2l-Yd-8Eu"/>
+                            <constraint firstItem="3vV-Yg-ZNP" firstAttribute="top" secondItem="5WI-V0-Ig8" secondAttribute="bottom" constant="40" id="Qmc-r7-dzs"/>
+                            <constraint firstItem="IUh-a5-aha" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Rpy-tV-5Ku"/>
+                            <constraint firstItem="cgM-4V-4eq" firstAttribute="top" secondItem="3vV-Yg-ZNP" secondAttribute="bottom" constant="40" id="g7I-t0-HWM"/>
+                            <constraint firstItem="IUh-a5-aha" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="40" id="hZY-0f-2a3"/>
+                            <constraint firstItem="5WI-V0-Ig8" firstAttribute="top" secondItem="Szo-GI-Q1J" secondAttribute="bottom" constant="40" id="lZL-lX-rHP"/>
+                            <constraint firstItem="5WI-V0-Ig8" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="llm-4A-kDH"/>
+                            <constraint firstItem="cgM-4V-4eq" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="x6L-Bx-tbj"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="139" y="119"/>
+        </scene>
+    </scenes>
+</document>
