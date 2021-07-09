@@ -5,8 +5,7 @@ There is a new API which allows the user to rate the app without being directed 
 - [requestReview() API](https://developer.apple.com/documentation/storekit/skstorereviewcontroller/2851536-requestreview)
 
 The requestReview() API may or may not show the rating dialog to the user when called so showing an interstitial before calling it wouldn't make sense.
-This solution lets you create an In App Message Campaign in Swrve and instead of showing an In App Message you will simply trigger the requestReview() API.
-This will allow you to trigger a call to the requestReview without triggering an In App Message.
+This solution uses a [Swrve Embedded Campaign](https://docs.swrve.com/user-documentation/campaigns/campaign-builder/content/embedded-campaigns/) to trigger the requestReview() API.
 
 How to Run This Demo in XCode
 ----------------------------
@@ -18,15 +17,19 @@ How to Run This Demo in XCode
 
 Code Changes Required
 ---------------------
-- See the changes required marked clearly in the AppDelegate.h and AppDelegate.m files.
-- The main change is to add a showMessage Delegate which takes over the normal rendering of an In App Message. 
-- The showMessageDelegate checks to see if the name of the Campaign contains "AppStore Review".
-- If it does - trigger the requestReview() API without showing a message.
-- If it does not - trigger the In App Message as normal.
+- See the changes required marked clearly in the AppDelegate.m file.
+- The main change is to configure the SwrveEmbeddedMessageConfig
+- You need to provide the callback method which will be called when any Swrve Embedded Campaign is triggered.
+- Inside the callback you have access to the JSON string added in the Content of the Campaign in the Swrve Dashboard.
+- In this example we check for a "campaign_type" parameter which should be set to "app_review". 
+- If this is the case we call the native iOS requestReview method
 
 Dashboard Setup
 ---------------
-- Create an In App Message campaign with a name containing "AppStore Review".
+- Create an Embedded campaign with the followin JSON content:
+```
+{"campaign_type":"app_review"}
+```
 - Set a target audience and triggering point for the campaign.
 - When the campaign is triggered a request to apple's requestReview() API will be made. 
 - The dialog may or may not be shown - Apple decide whether or not it should be shown.

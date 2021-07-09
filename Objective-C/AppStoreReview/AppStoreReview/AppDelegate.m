@@ -16,26 +16,34 @@
     
     SwrveConfig* config = [[SwrveConfig alloc] init];
     
+    // Configure the callback for Embedded Campaigns
+    SwrveEmbeddedMessageConfig *embeddedMessageConfig = [SwrveEmbeddedMessageConfig new];
+    [embeddedMessageConfig setEmbeddedMessageCallback:^(SwrveEmbeddedMessage *message) {
+
+        // Parse the JSON for the embedded campaign into a dictionary
+        NSData * jsonData = [message.data dataUsingEncoding:NSUTF8StringEncoding];
+        NSError * error=nil;
+        NSDictionary * parsedData = [NSJSONSerialization JSONObjectWithData:jsonData options:kNilOptions error:&error];
+        
+        // Check if the campaign_type is set to app_review in the campaign JSON
+        // If it is call the requestReview API
+        if ([parsedData[@"campaign_type"] isEqualToString:@"app_review"]) {
+            [SKStoreReviewController requestReview];
+        }
+        
+        // Trigger an impression event - in this case it doesn't actually mean that
+        // they saw the reveiw dialog. It means that requestReview was called.
+        [SwrveSDK embeddedMessageWasShownToUser:message];
+    }];
+    
+    // set the embeddedMessageConfig in the main SwrveConfig object
+    config.embeddedMessageConfig = embeddedMessageConfig;
+    
     [SwrveSDK sharedInstanceWithAppID:appId
     apiKey:apiKey
     config:config];
     
-    // Start of cusomization for App Review Solution
-    [SwrveSDK messaging].showMessageDelegate = self;
-    
     return YES;
-}
-
-// If we get a message containing our special string then show an alert
-// But if we get something else fallback to our normal message display code.
-- (void)showMessage:(SwrveMessage *)message {
-    if ([message.name rangeOfString:@"appstore review" options:NSCaseInsensitiveSearch].location != NSNotFound) {
-        [SKStoreReviewController requestReview];
-        [message wasShownToUser];
-    }
-    else {
-        [[SwrveSDK messaging] showMessage:message];
-    }
 }
 
 @end

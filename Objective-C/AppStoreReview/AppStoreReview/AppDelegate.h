@@ -6,7 +6,7 @@
 
 
 //--AppStoreReviewSolution-- Add SwrveMessageDelegate to the protocals
-@interface AppDelegate : UIResponder <UIApplicationDelegate, SwrveMessageDelegate>
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
 
