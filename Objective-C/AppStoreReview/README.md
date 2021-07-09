@@ -10,7 +10,7 @@ This solution uses a [Swrve Embedded Campaign](https://docs.swrve.com/user-docum
 How to Run This Demo in XCode
 ----------------------------
 - Run the "pod install" command inside the AppStoreReviewSolution folder.
-- Open the project located under AppStoreReviewSolution/AppStoreReviewSolution.xcworkspace
+- Open the project located under AppStoreReviewSolution/AppStoreReviewSolution.xcworkspace.
 - Replace YOUR_APP_ID in AppDelegate.m with your Swrve App ID.
 - Replace YOUR_API_KEY in AppDelegate.m with your Swrve API key.
 - Run AppStoreReviewSolution app normally.
@@ -18,15 +18,15 @@ How to Run This Demo in XCode
 Code Changes Required
 ---------------------
 - See the changes required marked clearly in the AppDelegate.m file.
-- The main change is to configure the SwrveEmbeddedMessageConfig
+- The main change is to configure the SwrveEmbeddedMessageConfig.
 - You need to provide the callback method which will be called when any Swrve Embedded Campaign is triggered.
 - Inside the callback you have access to the JSON string added in the Content of the Campaign in the Swrve Dashboard.
 - In this example we check for a "campaign_type" parameter which should be set to "app_review". 
-- If this is the case we call the native iOS requestReview method
+- If this is the case we call the native iOS requestReview method.
 
 Dashboard Setup
 ---------------
-- Create an Embedded campaign with the followin JSON content:
+- Create an Embedded campaign with the following JSON content:
 ```
 {"campaign_type":"app_review"}
 ```
