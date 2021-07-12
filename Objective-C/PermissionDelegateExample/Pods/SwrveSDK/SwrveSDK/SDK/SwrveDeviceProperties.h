@@ -15,6 +15,8 @@
 @property (nonatomic) NSString * deviceToken;
 @property (nonatomic) NSDictionary* permissionStatus;
 @property (nonatomic) NSString* swrveInitMode;
+@property (nonatomic) BOOL autoCollectIDFV;
+@property (nonatomic) NSString *idfa;
 
 #if TARGET_OS_IOS /** exclude tvOS **/
 @property (nonatomic) CTCarrier* carrierInfo;

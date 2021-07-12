@@ -6,5 +6,5 @@ target 'PermissionDelegateExample' do
   use_frameworks!
   
   # Pods for PermissionDelegateExample
-  pod 'SwrveSDK', '6.7.0'
+  pod 'SwrveSDK', '7.0.3'
 end

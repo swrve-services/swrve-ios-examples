@@ -1,11 +1,13 @@
 #import "SwrveMessageFormat.h"
+#import "SwrveBaseMessage.h"
 
 /*! Enumerates the possible types of action that can be associated with tapping a message button. */
 typedef enum {
     kSwrveActionDismiss,    /*!< Cancel the message display */
     kSwrveActionCustom,     /*!< Handle the custom action string associated with the button */
     kSwrveActionInstall,    /*!< Go to the url specified in the button’s action string */
-    kSwrveActionClipboard  /*!< Add Dynamic Text in place of the image */
+    kSwrveActionClipboard,  /*!< Add Dynamic Text in place of the image */
+    kSwrveActionCapability  /*!< Request IAM capability*/
 } SwrveActionType;
 
 /*! A block that will be called when a button is pressed inside
@@ -17,12 +19,10 @@ typedef void (^SwrveMessageResult)(SwrveActionType type, NSString *action, NSInt
 @class SwrveInAppCampaign;
 
 /*! In-app message. */
-@interface SwrveMessage : NSObject
+@interface SwrveMessage : SwrveBaseMessage
 
-@property (nonatomic, weak)              SwrveInAppCampaign* campaign; /*!< Reference to parent campaign */
-@property (nonatomic, retain)            NSNumber* messageID;     /*!< Identifies the message in a campaign */
+// @property (nonatomic, weak)              SwrveInAppCampaign* campaign; /*!< Reference to parent campaign */
 @property (nonatomic, retain)            NSString* name;          /*!< Name of the message */
-@property (nonatomic, retain)            NSNumber* priority;      /*!< Priority of the message */
 @property (nonatomic, retain)            NSArray*  formats;       /*!< Array of multiple formats for this message */
 
 /*! Create an in-app message from the JSON content.
@@ -57,14 +57,14 @@ typedef void (^SwrveMessageResult)(SwrveActionType type, NSString *action, NSInt
  *
  * \returns TRUE if all assets have been downloaded.
  */
--(BOOL)assetsReady:(NSSet*)assets;
+-(BOOL)assetsReady:(NSSet*)assets withPersonalization:(NSDictionary *) personalization;
 
 
-/*! Check if all personalised text in this message has been accounted for and can be set
+/*! Check if all personalized text in this message has been accounted for and can be set
 *
-* \returns TRUE if all personalised text parts have either fallbacks or values available to them
+* \returns TRUE if all personalized text parts have either fallbacks or values available to them
 */
--(BOOL)canResolvePersonalisation:(NSDictionary*)personalisation;
+-(BOOL)canResolvePersonalization:(NSDictionary*)personalization;
 
 /*! Notify that this message was shown to the user.
  */

@@ -1,5 +1,9 @@
 #import "SwrveDeviceProperties.h"
-#import <AdSupport/ASIdentifierManager.h>
+#if __has_include(<SwrveSDKCommon/SwrveLocalStorage.h>)
+#import <SwrveSDKCommon/SwrveLocalStorage.h>
+#else
+#import "SwrveLocalStorage.h"
+#endif
 
 #define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v)  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)
 
@@ -29,6 +33,7 @@ static NSString* SWRVE_IDFA  =                          @"swrve.IDFA";
 static NSString* SWRVE_IDFV =                           @"swrve.IDFV";
 static NSString* SWRVE_CAN_RECEIVE_AUTH_PUSH =          @"swrve.can_receive_authenticated_push";
 static NSString* SWRVE_SDK_INIT_MODE =                  @"swrve.sdk_init_mode";
+static NSString* SWRVE_DEVICE_TYPE =                    @"swrve.device_type";
 
 @implementation SwrveDeviceProperties
 
@@ -39,6 +44,8 @@ static NSString* SWRVE_SDK_INIT_MODE =                  @"swrve.sdk_init_mode";
 @synthesize permissionStatus = _permissionStatus;
 @synthesize sdk_language = _sdk_language;
 @synthesize swrveInitMode = _swrveInitMode;
+@synthesize autoCollectIDFV = _autoCollectIDFV;
+@synthesize idfa = _idfa;
 
 #if TARGET_OS_IOS /** exclude tvOS **/
 @synthesize conversationVersion = _conversationVersion;
@@ -137,6 +144,7 @@ static NSString* SWRVE_SDK_INIT_MODE =                  @"swrve.sdk_init_mode";
     [deviceProperties setValue:timezone_name        forKey:SWRVE_TIMEZONE_NAME];
     [deviceProperties setValue:regionCountry        forKey:SWRVE_DEVICE_REGION];
     [deviceProperties setValue:self.swrveInitMode   forKey:SWRVE_SDK_INIT_MODE];
+    [deviceProperties setValue:[SwrveUtils platformDeviceType] forKey:SWRVE_DEVICE_TYPE];
 
 #if TARGET_OS_IOS /** retrieve the properties only supported by iOS **/
     [deviceProperties setValue:[NSNumber numberWithInteger:self.conversationVersion] forKey:SWRVE_CONVERSION_VERSION];
@@ -167,26 +175,19 @@ static NSString* SWRVE_SDK_INIT_MODE =                  @"swrve.sdk_init_mode";
 #endif //TARGET_OS_IOS
     
     // Optional identifiers
-#if defined(SWRVE_LOG_IDFA)
-    if (@available(iOS 14,tvOS 14, *)) {
-        NSString *idfa = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
-        if ([SwrveUtils isValidIDFA:idfa]) {
-            [deviceProperties setValue:idfa forKey:SWRVE_IDFA];
-        }
-    } else {
-        if([[ASIdentifierManager sharedManager] isAdvertisingTrackingEnabled]) {
-            NSString *idfa = [[[ASIdentifierManager sharedManager] advertisingIdentifier] UUIDString];
-            [deviceProperties setValue:idfa forKey:SWRVE_IDFA];
-        }
+    if (self.idfa == nil) {
+        self.idfa = [SwrveLocalStorage idfa];
+    }
+    
+    if (self.idfa != nil) {
+        [deviceProperties setValue:self.idfa forKey:SWRVE_IDFA];
+    }
+    
+    if (self.autoCollectIDFV) {
+        NSString *idfv = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+        [deviceProperties setValue:idfv forKey:SWRVE_IDFV];
     }
 
-#endif //defined(SWRVE_LOG_IDFA)
-    
-#if defined(SWRVE_LOG_IDFV)
-    NSString *idfv = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    [deviceProperties setValue:idfv forKey:SWRVE_IDFV];
-#endif //defined(SWRVE_LOG_IDFV)
-    
     return deviceProperties;
 }
 

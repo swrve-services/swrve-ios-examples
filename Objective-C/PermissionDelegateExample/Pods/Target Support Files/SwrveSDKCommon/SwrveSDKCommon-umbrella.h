@@ -10,6 +10,7 @@
 #endif
 #endif
 
+#import "SwrveInAppCapabilitiesDelegate.h"
 #import "SwrvePermissions.h"
 #import "SwrvePermissionsDelegate.h"
 #import "SwrvePermissionState.h"
@@ -21,12 +22,14 @@
 #import "SwrveCommon.h"
 #import "SwrveEvents.h"
 #import "SwrveLocalStorage.h"
+#import "SwrveLogger.h"
 #import "SwrveNotificationConstants.h"
 #import "SwrveNotificationManager.h"
 #import "SwrveNotificationOptions.h"
 #import "SwrveQA.h"
 #import "SwrveQACampaignInfo.h"
 #import "SwrveQAEventsQueueManager.h"
+#import "SwrveQAImagePersonalizationInfo.h"
 #import "SwrveRESTClient.h"
 #import "SwrveSessionDelegate.h"
 #import "SwrveSignatureProtectedFile.h"

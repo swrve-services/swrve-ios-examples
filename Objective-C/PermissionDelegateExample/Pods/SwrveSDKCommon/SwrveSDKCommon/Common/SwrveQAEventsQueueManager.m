@@ -48,25 +48,25 @@ static NSString *const LOG_DETAILS_KEY = @"log_details";
     if (jsonData) {
         NSString *json_string = nil;
         json_string = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-        DebugLog(@"QaUser URL: %@", requestURL);
-        DebugLog(@"QaUser Body: %@", json_string);
+        [SwrveLogger debug:@"QaUser URL: %@", requestURL];
+        [SwrveLogger debug:@"QaUser Body: %@", json_string];
     }
     [self.restClient sendHttpPOSTRequest:requestURL
                                 jsonData:jsonData
                        completionHandler: ^(NSURLResponse *response, NSData *data, NSError *error) {
         if (error) {
-            DebugLog(@"QA Error: %@", error);
+            [SwrveLogger error:@"QA Error: %@", error];
         } else if (![response isKindOfClass:[NSHTTPURLResponse class]]) {
-            DebugLog(@"QA response was not a HTTP response: %@", response);
+            [SwrveLogger error:@"QA response was not a HTTP response: %@", response];
         } else {
             NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
             long status = [httpResponse statusCode];
             NSString *responseBody = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-            DebugLog(@"HTTP Send to QA Log %ld", status);
+            [SwrveLogger debug:@"HTTP Send to QA Log %ld", status];
             if (status != 200) {
 #pragma unused(responseBody)
-                DebugLog(@"HTTP Error %ld while doing Talk QA", status);
-                DebugLog(@"  %@", responseBody);
+                [SwrveLogger error:@"HTTP Error %ld while doing Talk QA", status];
+                [SwrveLogger error:@"  %@", responseBody];
             }
         }
 
@@ -92,14 +92,20 @@ static NSString *const LOG_DETAILS_KEY = @"log_details";
     if (![qalogevent objectForKey:LOG_TYPE_KEY] &&
         ![qalogevent objectForKey:LOG_SOURCE_KEY] &&
         ![qalogevent objectForKey:LOG_DETAILS_KEY]) {
-        DebugLog(@"Invalid qalogevent: %@", qalogevent);
+        [SwrveLogger error:@"Invalid qalogevent: %@", qalogevent];
         return;
     }
     @synchronized (self.flushTimer) {
         // When we queue an event we check if the timer is already running
         // if not we also start our timer, so it will [self flushEvents] after "queueQAFlushDelay".
         if (self.flushTimer == nil) {
-            self.flushTimer = [NSTimer scheduledTimerWithTimeInterval:queueQAFlushDelay target:self selector:@selector(flushEvents) userInfo:nil repeats:YES];
+            if (NSThread.currentThread.isMainThread) {
+                self.flushTimer = [NSTimer scheduledTimerWithTimeInterval:queueQAFlushDelay target:self selector:@selector(flushEvents) userInfo:nil repeats:YES];
+            } else{
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    self.flushTimer = [NSTimer scheduledTimerWithTimeInterval:queueQAFlushDelay target:self selector:@selector(flushEvents) userInfo:nil repeats:YES];
+                });
+            }
         }
         // Add common attributes (if not already present)
         if (![qalogevent objectForKey:@"type"]) {

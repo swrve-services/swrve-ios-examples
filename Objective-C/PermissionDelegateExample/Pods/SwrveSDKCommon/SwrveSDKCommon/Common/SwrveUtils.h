@@ -59,9 +59,7 @@
     Return current time since the epoch in milliseconds
     @return UInt64 of current time
  */
-//TODO: review and update the Swrve.m to use this method instead of "[self getTime]". (need update few test mock to support this change as well)
 + (UInt64)getTimeEpoch;
-
 
 /**
  Returns YES if running on platforms that support Conversations
@@ -69,7 +67,6 @@
  @return BOOL
  */
 + (BOOL) supportsConversations;
-
 
 /**
  Returns one of three options "mobile" , "tv" or "desktop" based on the platform running it.
@@ -84,5 +81,20 @@
  @return Bool
  */
 + (BOOL)isValidIDFA:(NSString *)idfa;
+
+/**
+ Produce a SHA1 code for a given piece of NSData
+ 
+ @return NSString representing the sha1 of the message argument
+ */
++ (NSString *)sha1:(NSData *)messageData;
+
+/**
+ Combine two NSDictionaries to make a single one.
+ One is considered the 'root' dictionary which will the other will be passed into. Any duplicate keys will have their contents overriden by the second.
+ 
+ @return NSDictionay with the duplicates stripped out
+ */
++ (NSDictionary *)combineDictionary:(NSDictionary*)rootDictionary withDictionary:(NSDictionary *)overiddingDictionary;
 
 @end

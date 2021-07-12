@@ -11,14 +11,12 @@
 #import "SwrveCampaign.h"
 
 #if __has_include(<SwrveSDKCommon/SwrveRESTClient.h>)
-
 #import <SwrveSDKCommon/SwrveRESTClient.h>
 #import <SwrveSDKCommon/SwrveQA.h>
 #import <SwrveSDKCommon/SwrveUser.h>
 #import <SwrveSDKCommon/SwrveNotificationManager.h>
 #import <SwrveSDKCommon/SwrvePermissions.h>
 #import <SwrveSDKCommon/SwrveCampaignDelivery.h>
-
 #else
 #import "SwrveQA.h"
 #import "SwrveRESTClient.h"
@@ -33,13 +31,7 @@
 #import "SwrveDeviceProperties.h"
 #import "SwrveEventsManager.h"
 
-#if __has_include(<SwrveConversationSDK/SwrveConversationEvents.h>)
-
-#import <SwrveConversationSDK/SwrveConversationEvents.h>
-
-#else
 #import "SwrveConversationEvents.h"
-#endif
 
 #import "SwrveProfileManager.h"
 #import "SwrveEventQueueItem.h"
@@ -157,7 +149,7 @@ enum {
 
 @end
 
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
 
 @interface SwrvePush (SwrvePushInternalAccess)
 
@@ -181,7 +173,7 @@ enum {
 
 @end
 
-#endif //!defined(SWRVE_NO_PUSH)
+#endif //TARGET_OS_IOS
 
 @interface Swrve () <SwrveCommonDelegate> {
     BOOL initialised;
@@ -235,6 +227,7 @@ enum {
 @property(atomic) BOOL initialised;
 @property(atomic) BOOL sdkStarted;
 
+@property(atomic) SwrveMessageController *messaging;
 @property(atomic) SwrveProfileManager *profileManager;
 
 // Used to store the merged user updates
@@ -276,7 +269,7 @@ enum {
 @property(atomic) NSOutputStream *eventStream;
 @property(atomic) NSURL *eventFilename;
 
-// keep track of whether any events were sent so we know whether to check for resources / campaign updates
+// Keep track of whether any events were sent so we know whether to check for resources / campaign updates
 @property(atomic) bool eventsWereSent;
 
 // URLs
@@ -288,9 +281,11 @@ enum {
 @property(atomic) NSMutableArray *pausedEventsArray;
 
 // Push
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
 @property(atomic, readonly) SwrvePush *push;                         /*!< Push Notification Handler Service */
-#endif //!defined(SWRVE_NO_PUSH)
+#endif //TARGET_OS_IOS
+
+@property(atomic) NSString *idfa;
 
 @end
 
@@ -358,7 +353,7 @@ enum {
 @synthesize apiKey;
 @synthesize messaging;
 @synthesize resourceManager;
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
 @synthesize push;
 #endif
 @synthesize initialised;
@@ -390,6 +385,7 @@ enum {
 @synthesize pausedEventsArray;
 @synthesize receiptProvider;
 @synthesize swrveDeeplinkManager;
+@synthesize idfa = _idfa;
 
 // Non shared instance initialization methods
 - (id)initWithAppID:(int)swrveAppID apiKey:(NSString *)swrveAPIKey {
@@ -401,7 +397,7 @@ enum {
     NSCAssert(self.config == nil, @"Do not initialize Swrve instance more than once!", nil);
     if (self = [super init]) {
         if (self.config) {
-            DebugLog(@"Swrve may not be initialized more than once.", nil);
+            [SwrveLogger error:@"Swrve may not be initialized more than once.", nil];
             return self;
         }
 
@@ -440,7 +436,7 @@ enum {
 
         receiptProvider = [[SwrveReceiptProvider alloc] init];
 
-        NSURL *base_events_url = [NSURL URLWithString:swrveConfig.eventsServer];
+        NSURL *base_events_url = [NSURL URLWithString:eventsServer];
         [self setBatchURL:[NSURL URLWithString:@"1/batch" relativeToURL:base_events_url]];
 
         NSURL *base_content_url = [NSURL URLWithString:self.config.contentServer];
@@ -458,7 +454,7 @@ enum {
                                                                          appId:self.appID
                                                                         apiKey:self.apiKey];
 
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
         if (swrveConfig.pushEnabled) {
             push = [SwrvePush sharedInstanceWithPushDelegate:self andCommonDelegate:self];
 
@@ -466,7 +462,7 @@ enum {
                 UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
                 center.delegate = push;
             } else {
-                DebugLog(@"UNUserNotificationCenter delegate not set, not supported (should not reach this code)", nil);
+                [SwrveLogger error:@"UNUserNotificationCenter delegate not set, not supported (should not reach this code)", nil];
             }
 
             if (swrveConfig.autoCollectDeviceToken) {
@@ -478,9 +474,7 @@ enum {
                 [self.push setResponseDelegate:pushDelegate];
             }
         }
-#else
-        DebugLog(@"\nWARNING: \nWe have deprecated the SWRVE_NO_PUSH flag as of release 4.9.1. \nIf you still need to exclude Push, please contact CSM with regards to future releases.\n", nil);
-#endif //!defined(SWRVE_NO_PUSH)
+#endif
 
         self.campaignsAndResourcesFlushFrequency = [SwrveLocalStorage flushFrequency];
         if (self.campaignsAndResourcesFlushFrequency <= 0) {
@@ -516,10 +510,12 @@ enum {
     if (config.abTestDetailsEnabled) {
         [self initABTestDetails];
     }
+    
+    [self initRealTimeUserProperties];
     [self initResources];
     [self initResourcesDiff];
-    [self initRealTimeUserProperties];
-
+    [self invokeResourcesRTUPCallback];
+    
     NSString *eventCacheFile = [SwrveLocalStorage eventsFilePathForUserId:swrveUserId];
     [self setEventFilename:[NSURL fileURLWithPath:eventCacheFile]];
     [self setEventStream:[self createEventfile:SWRVE_TRUNCATE_IF_TOO_LARGE]];
@@ -625,7 +621,7 @@ enum {
         }
     }];
 
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
     if (self.config.pushEnabled) {
         [self.push processInfluenceData];
         [self.push saveConfigForPushDelivery];
@@ -643,7 +639,7 @@ enum {
     if ([config initMode] == SWRVE_INIT_MODE_AUTO) {
         return true;
     } else if ([config initMode] == SWRVE_INIT_MODE_MANAGED &&
-            [config managedModeAutoStartLastUser] &&
+            [config autoStartLastUser] &&
             [[SwrveLocalStorage swrveUserId] length] > 0) {
         return true;
     } else {
@@ -721,10 +717,10 @@ enum {
 
             SwrveReceiptProviderResult *receipt = [self.receiptProvider receiptForTransaction:transaction];
             if (!receipt || !receipt.encodedReceipt) {
-                DebugLog(@"No transaction receipt could be obtained for %@", transactionId);
+                [SwrveLogger error:@"No transaction receipt could be obtained for %@", transactionId];
                 return SWRVE_FAILURE;
             }
-            DebugLog(@"Swrve building IAP event for transaction %@ (product %@)", transactionId, product_id);
+            [SwrveLogger debug:@"Swrve building IAP event for transaction %@ (product %@)", transactionId, product_id];
             NSString *encodedReceipt = receipt.encodedReceipt;
             NSString *localCurrency = [product.priceLocale objectForKey:NSLocaleCurrencyCode];
             double localCost = [[product price] doubleValue];
@@ -880,7 +876,7 @@ enum {
         }
 
     } else {
-        DebugLog(@"nil object passed into userUpdate:withDate", nil);
+        [SwrveLogger error:@"nil object passed into userUpdate:withDate", nil];
         return SWRVE_FAILURE;
     }
 
@@ -910,7 +906,7 @@ enum {
             NSDate *nextAllowedTime = [NSDate dateWithTimeInterval:self.campaignsAndResourcesFlushFrequency sinceDate:self.campaignsAndResourcesLastRefreshed];
             if ([now compare:nextAllowedTime] == NSOrderedAscending) {
                 // Too soon to call refresh again
-                DebugLog(@"Request to retrieve campaign and user resource data was rate-limited.", nil);
+                [SwrveLogger warning:@"Request to retrieve campaign and user resource data was rate-limited.", nil];
                 return;
             }
         }
@@ -919,7 +915,7 @@ enum {
     }
 
     NSURL *url = [self campaignsAndResourcesURL];
-    DebugLog(@"Refreshing campaigns from URL %@", url);
+    [SwrveLogger debug:@"Refreshing campaigns from URL %@", url];
     [restClient sendHttpGETRequest:url completionHandler:^(NSURLResponse *response, NSData *data, NSError *error) {
         if (!error) {
             NSInteger statusCode = 200;
@@ -943,7 +939,7 @@ enum {
                     BOOL loadPreviousCampaignState = YES;
                     NSDictionary *responseDict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
                     if ([responseDict count] == 0) { //if responseDict is == 0 then etag hasn't changed.
-                        DebugLog(@"SwrveSDK etag has not changed");
+                        [SwrveLogger debug:@"SwrveSDK etag has not changed", nil];
                     } else if ([responseDict objectForKey:@"qa"]) {
                         BOOL wasPreviouslyResetDevice = [[SwrveQA sharedInstance] resetDeviceState];
                         BOOL resetDevice = [[responseDict objectForKey:@"reset_device_state"] boolValue];
@@ -980,6 +976,16 @@ enum {
                         self.campaignsAndResourcesFlushRefreshDelay = [flushDelay integerValue] / 1000;
                         [SwrveLocalStorage saveflushDelay:self.campaignsAndResourcesFlushRefreshDelay];
                     }
+                    
+                    NSArray *resourceJson = [responseDict objectForKey:@"user_resources"];
+                    if (resourceJson != nil) {
+                        [self updateResources:resourceJson writeToCache:YES];
+                    }
+
+                    NSDictionary *realTimeUserPropertiesJson = [responseDict objectForKey:@"real_time_user_properties"];
+                    if (realTimeUserPropertiesJson != nil) {
+                        [self updateRealTimeUserProperties:realTimeUserPropertiesJson writeToCache:YES];
+                    }
 
                     if (self.messaging) {
                         NSDictionary *campaignJson = [responseDict objectForKey:@"campaigns"];
@@ -1000,24 +1006,20 @@ enum {
                             }
                         }
                     }
-
-                    NSArray *resourceJson = [responseDict objectForKey:@"user_resources"];
-                    if (resourceJson != nil) {
-                        [self updateResources:resourceJson writeToCache:YES];
-                    }
-
-                    NSDictionary *realTimeUserPropertiesJson = [responseDict objectForKey:@"real_time_user_properties"];
-                    if (realTimeUserPropertiesJson != nil) {
-                        [self updateRealTimeUserProperties:realTimeUserPropertiesJson writeToCache:YES];
+                    
+                    if (resourceJson != nil || realTimeUserPropertiesJson != nil) {
+                        if (self.campaignsAndResourcesInitialized) {
+                            [self invokeResourcesRTUPCallback];
+                        }
                     }
 
                 } else {
-                    DebugLog(@"Invalid JSON received for user resources and campaigns", nil);
+                    [SwrveLogger error:@"Invalid JSON received for user resources and campaigns", nil];
                 }
             } else if (statusCode == 429) {
-                DebugLog(@"Request to retrieve campaign and user resource data was rate-limited.", nil);
+                [SwrveLogger warning:@"Request to retrieve campaign and user resource data was rate-limited.", nil];
             } else {
-                DebugLog(@"Request to retrieve campaign and user resource data failed", nil);
+                [SwrveLogger error:@"Request to retrieve campaign and user resource data failed", nil];
             }
         }
 
@@ -1032,9 +1034,7 @@ enum {
 
             // Invoke listeners once to denote that the first attempt at downloading has finished
             // independent of whether the resources or campaigns have changed from cached values
-            if ([self.config resourcesUpdatedCallback]) {
-                [[self.config resourcesUpdatedCallback] invoke];
-            }
+            [self invokeResourcesRTUPCallback];
         }
     }];
 }
@@ -1100,7 +1100,7 @@ enum {
         return;
     }
     if (trackingState == EVENT_SENDING_PAUSED) {
-        DebugLog(@"Swrve event sending paused so attempt to send queued events has failed.", nil);
+        [SwrveLogger error:@"Swrve event sending paused so attempt to send queued events has failed.", nil];
         return;
     }
     [self sendQueuedEventsWithCallback:nil eventFileCallback:nil];
@@ -1117,7 +1117,7 @@ enum {
                           forceFlush:(BOOL)isForceFlush {
 
     if (trackingState == EVENT_SENDING_PAUSED && !isForceFlush) {
-        DebugLog(@"Swrve event sending paused.", nil);
+        [SwrveLogger warning:@"Swrve event sending paused.", nil];
         if (eventBufferCallback != nil) {
             eventBufferCallback(nil, nil, nil);
         }
@@ -1127,7 +1127,7 @@ enum {
         return;
     }
     if (!self.userID) {
-        DebugLog(@"Swrve user_id is null. Not sending data.", nil);
+        [SwrveLogger error:@"Swrve user_id is null. Not sending data.", nil];
         if (eventBufferCallback != nil) {
             eventBufferCallback(nil, nil, nil);
         }
@@ -1137,7 +1137,7 @@ enum {
         return;
     }
 
-    DebugLog(@"Sending queued events", nil);
+    [SwrveLogger debug:@"Sending queued events", nil];
     if ([self eventFileHasData]) {
         if (eventFileCallback == nil) {
             [self sendEventfile:nil];
@@ -1196,7 +1196,7 @@ enum {
                       }
 
                       if (error) {
-                          DebugLog(@"Error opening HTTP stream: %@ %@", [error localizedDescription], [error localizedFailureReason]);
+                          [SwrveLogger error:@"Error opening HTTP stream: %@ %@", [error localizedDescription], [error localizedFailureReason]];
                           [self eventsSentCallback:HTTP_SERVER_ERROR withData:data andContext:sendContext withSwrveUserId:swrveUserIdForEventSending]; //503 network error
                           if (eventBufferCallback != nil) {
                               eventBufferCallback(response, data, error);
@@ -1220,7 +1220,7 @@ enum {
     if (![self sdkReady]) {
         return;
     }
-    DebugLog(@"Writing unsent event data to file", nil);
+    [SwrveLogger debug:@"Writing unsent event data to file", nil];
 
     [self queueUserUpdates];
     [self queueDeviceInfo];
@@ -1233,11 +1233,11 @@ enum {
             NSData *bufferJson = [json dataUsingEncoding:NSUTF8StringEncoding];
             long bytes = [[self eventStream] write:(const uint8_t *) [bufferJson bytes] maxLength:[bufferJson length]];
             if (bytes == 0) {
-                DebugLog(@"Nothing was written to the event file", nil);
+                [SwrveLogger debug:@"Nothing was written to the event file", nil];
             } else if (bytes < 0) {
-                DebugLog(@"Error, could not write events to disk", nil);
+                [SwrveLogger error:@"Error, could not write events to disk", nil];
             } else {
-                DebugLog(@"Written to the event file", nil);
+                [SwrveLogger debug:@"Written to the event file", nil];
                 [self initBuffer];
             }
         }
@@ -1252,9 +1252,9 @@ enum {
 }
 
 - (void)shutdown {
-    DebugLog(@"shutting down swrveInstance..", nil);
+    [SwrveLogger debug:@"shutting down swrveInstance..", nil];
     if ([[SwrveInstanceIDRecorder sharedInstance] hasSwrveInstanceID:instanceID] == NO) {
-        DebugLog(@"Swrve shutdown: called on invalid instance.", nil);
+        [SwrveLogger error:@"Swrve shutdown: called on invalid instance.", nil];
         return;
     }
 
@@ -1278,7 +1278,7 @@ enum {
 
     [self setEventBuffer:nil];
 
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
     [self.push deswizzlePushMethods];
     [SwrvePush resetSharedInstance];
     push = nil;
@@ -1369,14 +1369,14 @@ enum {
         [self.messaging appDidBecomeActive];
     }
 
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
     if (self.config.pushEnabled) {
         [self.push processInfluenceData];
         if (_deviceToken == nil) {
             [SwrvePermissions refreshDeviceToken:self];
         }
     }
-#endif //!defined(SWRVE_NO_PUSH)
+#endif //TARGET_OS_IOS
 
     [self resumeCampaignsAndResourcesTimer];
     lastSessionDate = [self getNow];
@@ -1497,7 +1497,7 @@ enum {
     }
 }
 
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
 
 - (void)deviceTokenIncoming:(NSData *)newDeviceToken {
     [self setDeviceToken:newDeviceToken];
@@ -1543,7 +1543,7 @@ enum {
 }
 
 - (void)processNotificationResponseWithIdentifier:(NSString *)identifier andUserInfo:(NSDictionary *)userInfo {
-    DebugLog(@"Processing Push Notification Response: %@", identifier);
+    [SwrveLogger debug:@"Processing Push Notification Response: %@", identifier];
     NSURL *deeplinkUrl = [SwrveNotificationManager notificationResponseReceived:identifier withUserInfo:userInfo];
     if (deeplinkUrl) {
         [self deeplinkReceived:deeplinkUrl];
@@ -1556,15 +1556,21 @@ enum {
 
 - (void)deeplinkReceived:(NSURL *)url {
     if (@available(iOS 10.0, *)) {
-        [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:^(BOOL success) {
-            DebugLog(@"Opening url [%@] successfully: %d", url, success);
-        }];
+        id<SwrveDeeplinkDelegate> del = self.config.deeplinkDelegate;
+        if (del != nil && [del respondsToSelector:@selector(handleDeeplink:)]) {
+            [del handleDeeplink:url];
+            [SwrveLogger debug:@"Passing url to deeplink delegate for processing [%@]", url];
+        } else {
+            [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:^(BOOL success) {
+                [SwrveLogger debug:@"Opening url [%@] successfully: %d", url, success];
+            }];
+        }
     } else {
-        DebugLog(@"Deeplink not processed, not supported (should not reach this code)", nil);
+        [SwrveLogger error:@"Deeplink not processed, not supported (should not reach this code)", nil];
     }
 }
 
-#endif //!defined(SWRVE_NO_PUSH)
+#endif //TARGET_OS_IOS
 #pragma mark -
 
 - (void)setupConfig:(SwrveConfig *)newConfig {
@@ -1597,7 +1603,7 @@ enum {
 
 - (void)maybeFlushToDisk {
     if (trackingState == EVENT_SENDING_PAUSED) {
-        DebugLog(@"Swrve event sending paused so attempt to flush disk has failed.", nil);
+        [SwrveLogger error:@"Swrve event sending paused so attempt to flush disk has failed.", nil];
         return;
     }
     if (self.eventBufferBytes > SWRVE_MEMORY_QUEUE_MAX_BYTES) {
@@ -1614,7 +1620,7 @@ enum {
 
 - (int)queueEvent:(NSString *)eventType data:(NSMutableDictionary *)eventData triggerCallback:(bool)triggerCallback notifyMessageController:(bool)notifyMessageController {
     if (trackingState == EVENT_SENDING_PAUSED) {
-        DebugLog(@"Swrve event sending paused so attempt to queue events has failed. Will auto retry when event sending resumes.", nil);
+        [SwrveLogger warning:@"Swrve event sending paused so attempt to queue events has failed. Will auto retry when event sending resumes.", nil];
 
         // we want a deep copy of eventData attributes as they get cleared when user update is queued and that can happen before our paused event queue is sent.
         NSDictionary *copyEventData = [[NSDictionary alloc] initWithDictionary:eventData copyItems:YES];
@@ -1623,7 +1629,9 @@ enum {
                                                                               eventData:[copyEventData mutableCopy]
                                                                         triggerCallback:triggerCallback
                                                                 notifyMessageController:notifyMessageController];
-        [self.pausedEventsArray addObject:queueItem];
+        @synchronized (self.pausedEventsArray) {
+            [self.pausedEventsArray addObject:queueItem];
+        }
         return SWRVE_FAILURE;
     };
 
@@ -1673,14 +1681,14 @@ enum {
             appVersion = [[[NSBundle mainBundle] infoDictionary] valueForKey:@"CFBundleShortVersionString"];
         }
         @catch (NSException *e) {
-            DebugLog(@"Could not obtian version: %@", e);
+            [SwrveLogger error:@"Could not obtian version: %@", e];
         }
     }
     return appVersion;
 }
 
 - (NSSet *)notificationCategories {
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
     return self.config.notificationCategories;
 #else
     return nil;
@@ -1721,6 +1729,9 @@ enum {
 
 
 #endif
+    
+    swrveDeviceProperties.autoCollectIDFV = config.autoCollectIDFV;
+    swrveDeviceProperties.idfa = self.idfa;
 
     NSDictionary *deviceProperties = [swrveDeviceProperties deviceProperties];
     return deviceProperties;
@@ -1730,9 +1741,9 @@ enum {
     NSString *initMode = @"unknown";
     if (self.config.initMode == SWRVE_INIT_MODE_AUTO) {
         initMode = @"auto";
-    } else if (self.config.initMode == SWRVE_INIT_MODE_MANAGED && self.config.managedModeAutoStartLastUser) {
+    } else if (self.config.initMode == SWRVE_INIT_MODE_MANAGED && self.config.autoStartLastUser) {
         initMode = @"managed_auto";
-    } else if (self.config.initMode == SWRVE_INIT_MODE_MANAGED && !self.config.managedModeAutoStartLastUser) {
+    } else if (self.config.initMode == SWRVE_INIT_MODE_MANAGED && !self.config.autoStartLastUser) {
         initMode = @"managed";
     }
     return initMode;
@@ -1762,7 +1773,7 @@ enum {
     }
 
     if (!getenv("RUNNING_UNIT_TESTS")) {
-        DebugLog(@"Swrve config:\n%@", formattedDeviceData);
+        [SwrveLogger debug:@"Swrve config:\n%@", formattedDeviceData];
     }
 }
 
@@ -1817,7 +1828,7 @@ enum {
         NSError *jsonError;
         NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:content options:0 error:&jsonError];
         if (jsonError) {
-            DebugLog(@"Error parsing AB Test details.\nError: %@ %@", [jsonError localizedDescription], [jsonError localizedFailureReason]);
+            [SwrveLogger error:@"Error parsing AB Test details.\nError: %@ %@", [jsonError localizedDescription], [jsonError localizedFailureReason]];
         } else {
             id abTestDetailsJson = [jsonDict objectForKey:@"ab_test_details"];
             if (abTestDetailsJson != nil && [abTestDetailsJson isKindOfClass:[NSDictionary class]]) {
@@ -1837,10 +1848,6 @@ enum {
     if (writeToCache) {
         NSData *resourceData = [NSJSONSerialization dataWithJSONObject:resourceJson options:0 error:nil];
         [self.resourcesFile writeWithRespectToPlatform:resourceData];
-    }
-
-    if (self.config.resourcesUpdatedCallback != nil) {
-        [self.config.resourcesUpdatedCallback invoke];
     }
 }
 
@@ -1874,6 +1881,13 @@ enum {
     if (writeToCache) {
         NSData *propertiesData = [NSJSONSerialization dataWithJSONObject:realTimeUserPropertiesJson options:0 error:nil];
         [self.realTimeUserPropertiesFile writeWithRespectToPlatform:propertiesData];
+    }
+}
+
+- (void)invokeResourcesRTUPCallback {
+    // this is called when user resourcess / real time properties are initialised or updated.
+    if (self.config.resourcesUpdatedCallback != nil) {
+        [self.config.resourcesUpdatedCallback invoke];
     }
 }
 
@@ -1931,7 +1945,7 @@ enum HttpStatus {
                     newFile = [NSOutputStream outputStreamWithURL:filePath append:YES];
                 } else {
                     newFile = [NSOutputStream outputStreamWithURL:filePath append:NO];
-                    DebugLog(@"Swrve log file too large (%lu)... truncating", (unsigned long) cacheLength);
+                    [SwrveLogger error:@"Swrve log file too large (%lu)... truncating", (unsigned long) cacheLength];
                 }
             }
 
@@ -1952,13 +1966,13 @@ enum HttpStatus {
         switch (status) {
             case HTTP_REDIRECTION:
             case HTTP_SUCCESS:
-                DebugLog(@"Success sending events to Swrve", nil);
+                [SwrveLogger debug:@"Success sending events to Swrve", nil];
                 break;
             case HTTP_CLIENT_ERROR:
-                DebugLog(@"HTTP Error - not adding events back into the queue: %@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+                [SwrveLogger error:@"HTTP Error - not adding events back into the queue: %@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]];
                 break;
             case HTTP_SERVER_ERROR:
-                DebugLog(@"Error sending event data to Swrve (%@) Adding data back onto unsent message buffer", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+                [SwrveLogger error:@"Error sending event data to Swrve (%@) Adding data back onto unsent message buffer", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]];
 
                 // Edge case check, in case user id changed in identity call before this callback completed
                 NSString *currentSwrveUserId = [swrve userID];
@@ -1975,11 +1989,11 @@ enum HttpStatus {
                         NSData *bufferJson = [json dataUsingEncoding:NSUTF8StringEncoding];
                         long bytes = [stream write:(const uint8_t *) [bufferJson bytes] maxLength:[bufferJson length]];
                         if (bytes == 0) {
-                            DebugLog(@"Nothing was written to the event file", nil);
+                            [SwrveLogger debug:@"Nothing was written to the event file", nil];
                         } else if (bytes < 0) {
-                            DebugLog(@"Error, could not write events to disk", nil);
+                            [SwrveLogger error:@"Error, could not write events to disk", nil];
                         } else {
-                            DebugLog(@"Written to the event file", nil);
+                            [SwrveLogger debug:@"Written to the event file", nil];
                         }
                         [stream close];
                     }
@@ -2053,10 +2067,10 @@ enum HttpStatus {
             case HTTP_SUCCESS:
             case HTTP_CLIENT_ERROR:
             case HTTP_REDIRECTION:
-                DebugLog(@"Received a valid HTTP POST response. Truncating event log file", nil);
+                [SwrveLogger debug:@"Received a valid HTTP POST response. Truncating event log file", nil];
                 break;
             case HTTP_SERVER_ERROR:
-                DebugLog(@"Error sending log file - reopening in append mode: status", nil);
+                [SwrveLogger error:@"Error sending log file - reopening in append mode: status", nil];
                 mode = SWRVE_APPEND_TO_FILE;
                 break;
         }
@@ -2127,7 +2141,7 @@ enum HttpStatus {
                       [eventFileContext setSwrveInstanceID:self->instanceID];
 
                       if (error) {
-                          DebugLog(@"Error opening HTTP stream when sending the contents of the log file", nil);
+                          [SwrveLogger error:@"Error opening HTTP stream when sending the contents of the log file", nil];
                           [self eventFileSentCallback:HTTP_SERVER_ERROR withData:data andContext:eventFileContext]; //HTTP 503 Error, service not available
                           if (eventFileCallback != nil) {
                               eventFileCallback(response, data, error);
@@ -2159,7 +2173,7 @@ enum HttpStatus {
     NSError *err = nil;
     id obj = [NSJSONSerialization JSONObjectWithData:jsonNSData options:NSJSONReadingMutableContainers error:&err];
     if (err) {
-        DebugLog(@"Error with json.\nError:%@", err);
+        [SwrveLogger error:@"Error with json.\nError:%@", err];
     }
     return obj != nil;
 }
@@ -2170,7 +2184,7 @@ enum HttpStatus {
 
 - (void)signatureError:(NSURL *)file {
 #pragma unused(file)
-    DebugLog(@"Signature check failed for file %@", file);
+    [SwrveLogger error:@"Signature check failed for file %@", file];
     [self eventInternal:@"Swrve.signature_invalid" payload:nil triggerCallback:false];
 }
 
@@ -2205,7 +2219,7 @@ enum HttpStatus {
             callbackBlock(resourcesDict, jsonString);
         }
         @catch (NSException *e) {
-            DebugLog(@"Exception in userResources callback. %@", e);
+            [SwrveLogger error:@"Exception in userResources callback. %@", e];
         }
     }
 }
@@ -2231,7 +2245,7 @@ enum HttpStatus {
                     [self.resourcesDiffFile writeWithRespectToPlatform:data];
 
                 } else {
-                    DebugLog(@"Invalid JSON received for user resources diff", nil);
+                    [SwrveLogger error:@"Invalid JSON received for user resources diff", nil];
                 }
             }
         }
@@ -2265,7 +2279,7 @@ enum HttpStatus {
             callbackBlock(oldResourcesDict, newResourcesDict, jsonString);
         }
         @catch (NSException *e) {
-            DebugLog(@"Exception in userResourcesDiff callback. %@", e);
+            [SwrveLogger error:@"Exception in userResourcesDiff callback. %@", e];
         }
     }];
 }
@@ -2280,6 +2294,10 @@ enum HttpStatus {
     return url;
 }
 
+- (NSDictionary *)internalRealTimeUserProperties {
+    return self.realTimeUserProperties;
+}
+
 - (void)realTimeUserProperties:(SwrveRealTimeUserPropertiesCallback)callbackBlock {
     if (![self sdkReady]) {
         return;
@@ -2291,7 +2309,7 @@ enum HttpStatus {
             callbackBlock(self.realTimeUserProperties);
         }
         @catch (NSException *e) {
-            DebugLog(@"Exception in realtimeUserProperies callback. %@", e);
+            [SwrveLogger error:@"Exception in realtimeUserProperies callback. %@", e];
         }
     }
 }
@@ -2309,11 +2327,6 @@ enum HttpStatus {
                                                                                  errorDelegate:delegate];
 
     return file;
-}
-
-- (SwrveMessageController *)messagingController {
-
-    return self.messaging;
 }
 
 - (void)initSwrveDeeplinkManager {
@@ -2357,8 +2370,8 @@ enum HttpStatus {
 
 - (void)handleNotificationToCampaign:(NSString *)campaignId {
 
-    if ([config initMode] == SWRVE_INIT_MODE_MANAGED && ![config managedModeAutoStartLastUser]) {
-        DebugLog(@"Warning: SwrveSDK Push to IAM/Conv cannot execute in MANAGED mode and managedModeAutoStartLastUser==false.", nil);
+    if ([config initMode] == SWRVE_INIT_MODE_MANAGED && ![config autoStartLastUser]) {
+        [SwrveLogger warning:@"Warning: SwrveSDK Push to IAM/Conv cannot execute in MANAGED mode and autoStartLastUser==false.", nil];
         return;
     }
     [self initSwrveDeeplinkManager];
@@ -2388,9 +2401,9 @@ enum HttpStatus {
         return;
     }
 
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
     [SwrveNotificationManager clearAllAuthenticatedNotifications];
-#endif //!defined(SWRVE_NO_PUSH)
+#endif
 
     // update SwrveProfileManager
     [self.profileManager switchUser:newUserID];
@@ -2415,7 +2428,7 @@ enum HttpStatus {
     }
 
     if (externalUserId == nil || [externalUserId isEqualToString:@""]) {
-        DebugLog(@"Swrve identify: External user id cannot be nil or empty", nil);
+        [SwrveLogger error:@"Swrve identify: External user id cannot be nil or empty", nil];
         if (onError != nil) {
             onError(-1, @"External user id cannot be nil or empty");
         }
@@ -2426,12 +2439,12 @@ enum HttpStatus {
     [self queueUserUpdates];
     [self queueDeviceInfo];
 
-    DebugLog(@"Swrve identify: Pausing event queuing and sending prior to Identity API call...", nil);
+    [SwrveLogger debug:@"Swrve identify: Pausing event queuing and sending prior to Identity API call...", nil];
     [self pauseEventSending];
 
     dispatch_group_t sendEventsCallback = dispatch_group_create();
 
-    DebugLog(@"Swrve identify: Flushing event buffer and cache prior to Identity API call...", nil);
+    [SwrveLogger debug:@"Swrve identify: Flushing event buffer and cache prior to Identity API call...", nil];
     // this will force flush events even though event sending and queuing has been paused above
     [self forceFlushAllEvents:sendEventsCallback];
 
@@ -2469,7 +2482,7 @@ enum HttpStatus {
 - (BOOL)identifyCachedUser:(SwrveUser *)cachedSwrveUser withCallback:(void (^)(NSString *status, NSString *swrveUserId))onSuccess {
     BOOL isVerified = NO;
     if (cachedSwrveUser != nil && cachedSwrveUser.verified) {
-        DebugLog(@"Swrve identify: Identity API call skipped, user loaded from cache. Event sending reenabled.", nil);
+        [SwrveLogger debug:@"Swrve identify: Identity API call skipped, user loaded from cache. Event sending reenabled.", nil];
         [self switchUser:cachedSwrveUser.swrveId isFirstSession:false];
 
         if (onSuccess != nil) {
@@ -2492,7 +2505,7 @@ enum HttpStatus {
 
     [self.profileManager identify:externalUserId swrveUserId:unidentifiedSwrveId onSuccess:^(NSString *status, NSString *swrveUserId) {
 #pragma unused(status)
-        DebugLog(@"Swrve identify: Identity service success: %@", status);
+        [SwrveLogger debug:@"Swrve identify: Identity service success: %@", status];
 
         //update the swrve user in cache
         [self.profileManager updateSwrveUserWithId:swrveUserId externalUserId:externalUserId];
@@ -2507,7 +2520,7 @@ enum HttpStatus {
 
     }                     onError:^(NSInteger httpCode, NSString *errorMessage) {
 #pragma unused(errorMessage)
-        DebugLog(@"Swrve identify: Identity service returned %li error message: %@", (long) httpCode, errorMessage);
+        [SwrveLogger error:@"Swrve identify: Identity service returned %li error message: %@", (long) httpCode, errorMessage];
 
         [self switchUser:unidentifiedSwrveId isFirstSession:true];
 
@@ -2539,16 +2552,14 @@ enum HttpStatus {
 }
 
 - (void)queuePausedEventsArray {
-    NSMutableArray *pausedEventsArrayToSend = nil;
     @synchronized (self.pausedEventsArray) {
         if ([self.pausedEventsArray count] == 0) {
             return;
         }
-        pausedEventsArrayToSend = [self.pausedEventsArray copy];
-        for (SwrveEventQueueItem *queueItem in pausedEventsArrayToSend) {
+        for (SwrveEventQueueItem *queueItem in [self.pausedEventsArray reverseObjectEnumerator]) {
             [self queueEvent:queueItem.eventType data:queueItem.eventData triggerCallback:queueItem.triggerCallback notifyMessageController:queueItem.notifyMessageController];
         }
-        if ([pausedEventsArrayToSend count] > 0) {
+        if ([self.pausedEventsArray count] > 0) {
             [self sendQueuedEvents];
         }
         [self.pausedEventsArray removeAllObjects];
@@ -2556,7 +2567,7 @@ enum HttpStatus {
 }
 
 - (void)enableEventSending {
-    DebugLog(@"Swrve: Event sending reenabled", nil);
+    [SwrveLogger debug:@"Swrve: Event sending reenabled", nil];
     trackingState = ON;
     [self resumeCampaignsAndResourcesTimer];
 }
@@ -2619,13 +2630,13 @@ enum HttpStatus {
         userId = self.profileManager.userId;
     }
 
-    DebugLog(@"Swrve startWithUserId: Pausing event queuing and sending prior to changing user...", nil);
+    [SwrveLogger debug:@"Swrve startWithUserId: Pausing event queuing and sending prior to changing user...", nil];
     [self pauseEventSending];
 
     dispatch_group_t sendEventsCallback = dispatch_group_create();
 
     // this will force flush events even though event sending and queuing has been paused above
-    DebugLog(@"Swrve startWithUserId: Flushing event buffer and cache prior to changing user...", nil);
+    [SwrveLogger debug:@"Swrve startWithUserId: Flushing event buffer and cache prior to changing user...", nil];
     [self forceFlushAllEvents:sendEventsCallback];
 
     // this code should only execute after the 2 callbacks in flushAllEvents complete
@@ -2645,18 +2656,11 @@ enum HttpStatus {
 
 - (BOOL)sdkReady {
     if (([config initMode] == SWRVE_INIT_MODE_MANAGED) && [self started] == NO) {
-        DebugLog(@"Warning: SwrveSDK needs to be started in MANAGED mode before calling this api.", nil);
+        [SwrveLogger error:@"Warning: SwrveSDK needs to be started in MANAGED mode before calling this api.", nil];
         return NO;
     } else {
         return YES;
     }
-}
-
-- (SwrveMessageController *)messaging {
-    if (![self sdkReady]) {
-        messaging = [SwrveMessageController new];
-    }
-    return messaging;
 }
 
 - (SwrveResourceManager *)resourceManager {
@@ -2673,5 +2677,62 @@ enum HttpStatus {
                      userInfo:nil];
     @throw e;
 }
+
+#pragma mark Messaging
+
+- (void)embeddedMessageWasShownToUser:(SwrveEmbeddedMessage *)message {
+    [messaging embeddedMessageWasShownToUser:message];
+}
+
+- (void)embeddedButtonWasPressed:(SwrveEmbeddedMessage *)message buttonName:(NSString *)button {
+    [messaging embeddedButtonWasPressed:message buttonName:button];
+}
+
+- (NSArray *)messageCenterCampaigns {
+    return [messaging messageCenterCampaigns];
+}
+
+- (NSArray *)messageCenterCampaignsWithPersonalization:(NSDictionary *)personalization {
+    return [messaging messageCenterCampaignsWithPersonalization:personalization];
+}
+
+#if TARGET_OS_IOS /** exclude tvOS **/
+
+- (NSArray *)messageCenterCampaignsThatSupportOrientation:(UIInterfaceOrientation)orientation {
+    return [messaging messageCenterCampaignsThatSupportOrientation:orientation];
+}
+
+- (NSArray *)messageCenterCampaignsThatSupportOrientation:(UIInterfaceOrientation)orientation withPersonalization:(NSDictionary *)personalization {
+    return [messaging messageCenterCampaignsThatSupportOrientation:orientation withPersonalization:personalization];
+}
+
+#endif
+
+- (BOOL)showMessageCenterCampaign:(SwrveCampaign *)campaign {
+    return [messaging showMessageCenterCampaign:campaign];
+}
+
+- (BOOL)showMessageCenterCampaign:(SwrveCampaign *)campaign withPersonalization:(NSDictionary *)personalization {
+    return [messaging showMessageCenterCampaign:campaign withPersonalization:personalization];
+}
+
+- (void)removeMessageCenterCampaign:(SwrveCampaign *)campaign {
+    [messaging removeMessageCenterCampaign:campaign];
+}
+
+- (void)markMessageCenterCampaignAsSeen:(SwrveCampaign *)campaign {
+    [messaging markMessageCenterCampaignAsSeen:campaign];
+}
+
+- (void)idfa:(NSString *)idfa {
+    if (![SwrveUtils isValidIDFA:idfa]) {
+        [SwrveLogger error:[NSString stringWithFormat:@"attempt to set invalid IDFA: %@",idfa]];
+    } else {
+        self.idfa = idfa;
+        [SwrveLocalStorage saveIDFA:idfa];
+    }
+}
+
+#pragma mark -
 
 @end

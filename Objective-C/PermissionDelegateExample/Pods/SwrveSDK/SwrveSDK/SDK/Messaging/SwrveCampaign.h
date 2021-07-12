@@ -1,4 +1,10 @@
 #import "SwrveCampaignStatus.h"
+#if __has_include(<SwrveSDKCommon/SwrveQACampaignInfo.h>)
+#import <SwrveSDKCommon/SwrveQACampaignInfo.h>
+#else
+#import "SwrveQACampaignInfo.h"
+#endif
+
 @class SwrveMessageController;
 
 /*! Base campaign state. */
@@ -6,7 +12,6 @@
 
 @property (atomic)            NSUInteger campaignID;                /*!< Unique identifier. */
 @property (atomic)            NSUInteger impressions;               /*!< Amount of times this campaign has been shown for a user. */
-@property (atomic)            NSUInteger next;                      /*!< Next message to be shown if set-up as round robin. */
 @property (nonatomic)         SwrveCampaignStatus status;           /*!< The status of the Message Center campaign. */
 @property (nonatomic, retain) NSDate* showMsgsAfterDelay;           /*!< Timestamp to block messages from appearing too frequently . */
 
@@ -33,6 +38,7 @@
 @property (atomic)            bool messageCenter;                   /*!< Flag indicating if it is a Message Center campaign. */
 @property (nonatomic, retain) NSString* subject;                    /*!< Message Center subject of the campaign. */
 @property (nonatomic, retain) NSDate* dateStart;                    /*!< Timestamp representing the start date of Message Center campaign. */
+@property (atomic)            SwrveCampaignType campaignType;       /*!< Enum representing the campaign type for QA Logging. */
 
 /*! Initialize the campaign.
  *
@@ -54,6 +60,6 @@
  *
  * \returns TRUE if all assets have been downloaded.
  */
--(BOOL)assetsReady:(NSSet*)assets;
+-(BOOL)assetsReady:(NSSet *)assets withPersonalization:(NSDictionary *)personalization;
 
 @end

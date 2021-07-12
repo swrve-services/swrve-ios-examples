@@ -1,12 +1,8 @@
-#if !defined(SWRVE_NO_PUSH)
-
 #import <Foundation/Foundation.h>
 #import <UserNotifications/UserNotifications.h>
 #import "SwrveCommon.h"
 
 NS_ASSUME_NONNULL_BEGIN
-extern NSString *const SwrveSilentPushIdentifierKey;
-extern NSString *const SwrveSilentPushPayloadKey;
 extern NSString *const SwrveContentVersionKey;
 
 @protocol SwrvePushDelegate <NSObject>
@@ -46,5 +42,3 @@ extern NSString *const SwrveContentVersionKey;
 @end
 
 NS_ASSUME_NONNULL_END
-#endif //!defined(SWRVE_NO_PUSH)
-

@@ -3,20 +3,22 @@
 #import "SwrveInterfaceOrientation.h"
 #import "SwrveConfig.h"
 #import "SwrveInAppMessageConfig.h"
+#import "SwrveEmbeddedMessageConfig.h"
 #import "SwrveReceiptProvider.h"
+#import "SwrveDeeplinkDelegate.h"
 #if __has_include(<SwrveSDKCommon/SwrvePermissionsDelegate.h>)
 #import <SwrveSDKCommon/SwrvePermissionsDelegate.h>
 #else
 #import "SwrvePermissionsDelegate.h"
 #endif
 
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
 #if __has_include(<SwrveSDKCommon/SwrvePush.h>)
 #import <SwrveSDKCommon/SwrvePush.h>
 #else
 #import "SwrvePush.h"
 #endif
-#endif /*!defined(SWRVE_NO_PUSH) */
+#endif //TARGET_OS_IOS
 
 /*! Swrve stack names. */
 enum SwrveStack {
@@ -29,7 +31,7 @@ typedef enum {
     /// This is the default mode and automatically tracks when your app appears in the foreground.
             SWRVE_INIT_MODE_AUTO,
     /// This mode should be configured to manage setting the userId and manage how it starts.
-    /// See managedModeAutoStartLastUser configuration also.
+    /// See autoStartLastUser configuration also.
             SWRVE_INIT_MODE_MANAGED
 } SwrveInitMode;
 
@@ -43,13 +45,6 @@ typedef void (^SwrveResourcesUpdatedListener) (void);
 
 /*! The supported orientations of the app. */
 @property (nonatomic) SwrveInterfaceOrientation orientation;
-
-/*! By default Swrve will choose the status bar appearance
- * when presenting any In-app view Incontrollers.
- * You can disable this functionality by setting
- * prefersIAMStatusBarHidden to false.
- */
-@property (nonatomic) BOOL prefersIAMStatusBarHidden;
 
 /*! By default the app will choose the status bar appearance
  * when presenting any Conversation view controllers.
@@ -80,11 +75,11 @@ typedef void (^SwrveResourcesUpdatedListener) (void);
  */
 @property (nonatomic) BOOL autoDownloadCampaignsAndResources;
 
-/*! Default in-app background color used if none is specified in the template */
-@property (nonatomic, retain) UIColor *inAppMessageBackgroundColor;
-
 /*! in-app config */
 @property (nonatomic, retain) SwrveInAppMessageConfig *inAppMessageConfig;
+
+/*! embedded config */
+@property (nonatomic, retain) SwrveEmbeddedMessageConfig *embeddedMessageConfig;
 
 /*! Session timeout time in seconds. User activity after this time will be considered a new session. */
 @property (nonatomic) double newSessionInterval;
@@ -113,7 +108,7 @@ typedef void (^SwrveResourcesUpdatedListener) (void);
  */
 @property (nonatomic) BOOL autoSaveEventsOnResign;
 
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
 /*! Controls if push notifications are enabled. */
 @property (nonatomic) BOOL pushEnabled;
 
@@ -142,7 +137,7 @@ typedef void (^SwrveResourcesUpdatedListener) (void);
  */
 @property (nonatomic, weak) id<SwrvePushResponseDelegate> pushResponseDelegate;
 
-#endif //!defined(SWRVE_NO_PUSH)
+#endif //TARGET_OS_IOS
 
 /*! NSString identifier which refers to the app group that stores settings information.
  *  Intialise this if you are using extensions and want to share data across to swrve.
@@ -189,7 +184,7 @@ typedef void (^SwrveResourcesUpdatedListener) (void);
  * the start api is called and the userId is set. Once set, it will autostart when UI is shown. Set to false to force the
  * sdk to always delay tracking until a start api is called.
  */
-@property(nonatomic) BOOL managedModeAutoStartLastUser;
+@property(nonatomic) BOOL autoStartLastUser;
 
 /*! Obtain information about the AB Tests a user is part of.
  */
@@ -199,6 +194,13 @@ typedef void (^SwrveResourcesUpdatedListener) (void);
  */
 @property (nonatomic, weak) id <SwrvePermissionsDelegate> permissionsDelegate;
 
+/*!< Implement this delegate to override deeplink handling. */
+@property(nonatomic, weak) id <SwrveDeeplinkDelegate> deeplinkDelegate;
+
+/*! Controls if we auto collect and send the IDFV as a device property
+ */
+@property (nonatomic) BOOL autoCollectIDFV;
+
 @end
 
 /*! Immutable copy of a SwrveConfig object */
@@ -206,7 +208,6 @@ typedef void (^SwrveResourcesUpdatedListener) (void);
 
 - (id)initWithMutableConfig:(SwrveConfig *)config;
 @property (nonatomic, readonly) SwrveInterfaceOrientation orientation;
-@property (nonatomic, readonly) BOOL prefersIAMStatusBarHidden;
 @property (nonatomic, readonly) BOOL prefersConversationsStatusBarHidden;
 @property (nonatomic, readonly) int httpTimeoutSeconds;
 @property (nonatomic, readonly) NSString *eventsServer;
@@ -215,26 +216,28 @@ typedef void (^SwrveResourcesUpdatedListener) (void);
 @property (nonatomic, readonly) NSString *language;
 @property (nonatomic, readonly) NSString *appVersion;
 @property (nonatomic, readonly) BOOL autoDownloadCampaignsAndResources;
-@property (nonatomic, readonly) UIColor *inAppMessageBackgroundColor;
 @property (nonatomic, readonly) SwrveInAppMessageConfig *inAppMessageConfig;
+@property (nonatomic, readonly) SwrveEmbeddedMessageConfig *embeddedMessageConfig;
 @property (nonatomic, readonly) double newSessionInterval;
 @property (nonatomic, readonly) SwrveResourcesUpdatedListener resourcesUpdatedCallback;
 @property (nonatomic, readonly) BOOL autoSendEventsOnResume;
 @property (nonatomic, readonly) BOOL autoSaveEventsOnResign;
-#if !defined(SWRVE_NO_PUSH) && TARGET_OS_IOS
+#if TARGET_OS_IOS
 @property (nonatomic, readonly) BOOL pushEnabled;
 @property (nonatomic, readonly) NSSet *provisionalPushNotificationEvents;
 @property (nonatomic, readonly) NSSet *pushNotificationEvents;
 @property (nonatomic, readonly) BOOL autoCollectDeviceToken;
 @property (nonatomic, readonly) NSSet *notificationCategories;
 @property (nonatomic, weak, readonly) id<SwrvePushResponseDelegate> pushResponseDelegate;
-#endif //!defined(SWRVE_NO_PUSH)
+#endif //TARGET_OS_IOS
 @property (nonatomic, readonly) NSString *appGroupIdentifier;
 @property (nonatomic, readonly) long autoShowMessagesMaxDelay;
 @property (nonatomic, readonly) enum SwrveStack stack;
 @property (nonatomic, readonly) SwrveInitMode initMode;
-@property(nonatomic, readonly) BOOL managedModeAutoStartLastUser;
+@property(nonatomic, readonly) BOOL autoStartLastUser;
 @property (nonatomic) BOOL abTestDetailsEnabled;
 @property (nonatomic, weak, readonly) id <SwrvePermissionsDelegate> permissionsDelegate;
+@property (nonatomic, weak, readonly) id <SwrveDeeplinkDelegate> deeplinkDelegate;
+@property (nonatomic) BOOL autoCollectIDFV;
 
 @end

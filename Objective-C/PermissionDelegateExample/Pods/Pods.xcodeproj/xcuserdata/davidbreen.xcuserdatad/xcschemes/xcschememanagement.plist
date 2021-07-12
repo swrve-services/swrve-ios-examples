@@ -9,12 +9,7 @@
 			<key>isShown</key>
 			<false/>
 		</dict>
-		<key>SwrveConversationSDK-SwrveConversationSDK.xcscheme</key>
-		<dict>
-			<key>isShown</key>
-			<false/>
-		</dict>
-		<key>SwrveConversationSDK.xcscheme</key>
+		<key>SwrveSDK-SwrveConversationSDK.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>

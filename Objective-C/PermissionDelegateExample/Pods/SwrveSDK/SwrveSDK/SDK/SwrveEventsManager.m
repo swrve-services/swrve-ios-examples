@@ -27,7 +27,7 @@
     NSMutableArray *restrictedNamesStartWith = [NSMutableArray arrayWithObjects:@"Swrve.", @"swrve.", nil];
     for (NSString *restricted in restrictedNamesStartWith) {
         if (eventName == nil || [eventName hasPrefix:restricted]) {
-            DebugLog(@"Event names cannot begin with %@* This event will not be sent. Eventname:%@", restricted, eventName);
+            [SwrveLogger error:@"Event names cannot begin with %@* This event will not be sent. Eventname:%@", restricted, eventName];
             return false;
         }
     }

@@ -185,7 +185,7 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-UserSampleId/Pods-UserSampleId-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/SwrveConversationSDK/SwrveConversationSDK.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/SwrveSDK/SwrveConversationSDK.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
